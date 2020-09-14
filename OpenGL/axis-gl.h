@@ -37,10 +37,6 @@ static inline void InitializeOrthoWindow(char* windowName, axis_viewport_t vp, a
 
     /* Window Size */
     gluOrtho2D(ortho.l, ortho.r, ortho.b, ortho.t);
-
-    /* Register Colors */
-    glClear(GL_COLOR_BUFFER_BIT);
-    glFlush();
 }
 
 static inline void AxisGLEnd(void)
@@ -76,7 +72,7 @@ static inline void AxisGL1Triangle(axis_vtx_t* vtx, int v0, int v1, int v2, int 
     AxisGLSetFillColor(vtx[a].col); glVertex3f(vtx[a].pos.x, vtx[a].pos.y, vtx[a].pos.z);
     AxisGLSetFillColor(vtx[b].col); glVertex3f(vtx[b].pos.x, vtx[b].pos.y, vtx[b].pos.z);
     AxisGLSetFillColor(vtx[c].col); glVertex3f(vtx[c].pos.x, vtx[c].pos.y, vtx[c].pos.z);
-    AxisGLEnd();
+    glEnd();
 }
 
 static inline void AxisGL2Triangles(axis_vtx_t* vtx, int v0, int v1, int v2, int flag0, int v3, int v4, int v5, int flag1)
@@ -120,7 +116,7 @@ static inline void AxisGL2Triangles(axis_vtx_t* vtx, int v0, int v1, int v2, int
     AxisGLSetFillColor(vtx[a].col); glVertex3f(vtx[a].pos.x, vtx[a].pos.y, vtx[a].pos.z);
     AxisGLSetFillColor(vtx[b].col); glVertex3f(vtx[b].pos.x, vtx[b].pos.y, vtx[b].pos.z);
     AxisGLSetFillColor(vtx[c].col); glVertex3f(vtx[c].pos.x, vtx[c].pos.y, vtx[c].pos.z);
-    AxisGLEnd();
+    glEnd();
 }
 
 static inline void AxisGLQuadrangle(axis_vtx_t* vtx, int v0, int v1, int v2, int v3, int flag)
@@ -149,7 +145,7 @@ static inline void AxisGLQuadrangle(axis_vtx_t* vtx, int v0, int v1, int v2, int
     AxisGLSetFillColor(vtx[b].col); glVertex3f(vtx[b].pos.x, vtx[b].pos.y, vtx[b].pos.z);
     AxisGLSetFillColor(vtx[c].col); glVertex3f(vtx[c].pos.x, vtx[c].pos.y, vtx[c].pos.z);
     AxisGLSetFillColor(vtx[d].col); glVertex3f(vtx[d].pos.x, vtx[d].pos.y, vtx[d].pos.z);
-    AxisGLEnd();
+    glEnd();
 }
 
 static inline void AxisGLFillRectangle(float ulx, float uly, float lrx, float lry)

@@ -35,12 +35,11 @@ void drawInnerRect(void)
         -(ortho.r - 20), -(ortho.t - 20)
     };
     glRectf(inner_rect.urx, inner_rect.ury, inner_rect.llx, inner_rect.lly);
-    glFlush();
 }
 
 void rotateTri(void)
 {
-    //glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     AxisGL2Triangles(tri, 0, 1, 2, 0, 0, 2, 3, 0);
     glRotatef(0.02f, 0, 0, 1);
