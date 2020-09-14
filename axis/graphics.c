@@ -1,48 +1,4 @@
-#ifndef GRAPHICS_H
-#define GRAPHICS_H
-
-#include <ultra64.h>
-#include "matrix.h"
-#include "vectortypes.h"
-#include "inttypes.h"
-#include "video.h"
-
-#define	GLIST_LEN (8192)
-
-typedef struct
-{
-    Mtx	projection;
-	Mtx	modeling;
-	Mtx	viewing;
-    Mtx identity;
-	Gfx	glist[GLIST_LEN];
-} dynamic_t;
-
-
-typedef struct {
-    dynamic_t dyn;
-	mtxf_t projection;
-	mtxf_t viewing;
-    mtxf_t identity;
-    vec3f_t up;
-    float fov;
-    float aspect;
-    float near;
-    float far;
-    float scale;
-    uint16_t persp_norm;
-} view_t;
-
-typedef struct
-{
-    COLOR_DEPTH_TYPE framebuffer[2][SCREEN_WD * SCREEN_HT];
-    COLOR_DEPTH_TYPE rsp_framebuffer[2][SCREEN_WD * SCREEN_HT];
-    OSMesgQueue rdp_message_queue, sync_message_queue;
-    OSMesg rdp_message_buffer, sync_message_buffer;
-    view_t view;
-    Vp viewport;
-    uint8_t current_fb;
-} graphics_context_t;
+#include "graphics.h"
 
 void view_t_construct(view_t* view) {
     int i;
@@ -96,6 +52,4 @@ void graphics_context_t_construct(graphics_context_t* context) {
 
     context->current_fb = 0;
 }
-
-#endif
 

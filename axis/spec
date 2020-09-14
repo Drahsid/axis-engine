@@ -1,32 +1,37 @@
 #include "main.h"
 
+/*
+ * ROM spec file
+ */
 beginseg
 	name "code"
 	flags BOOT OBJECT
 	entry boot
-	stack boot_stack + STACKSIZE
+	stack g_boot_stack + STACKSIZE
 	include "codesegment.o"
 	include "$(ROOT)/usr/lib/PR/rspboot.o"
-	include "$(ROOT)/usr/lib/PR/gspF3DEX2.xbus.o"
 	include "$(ROOT)/usr/lib/PR/gspF3DEX2.fifo.o"
+	include "$(ROOT)/usr/lib/PR/gspF3DEX2.xbus.o"
 endseg
 
 beginseg
 	name "static"
 	flags OBJECT
 	number STATIC_SEGMENT
+	include "static.o"
 endseg
 
 beginseg
-	name "dynamic"
+	name "rsp_framebuffer"
 	flags OBJECT
-	number DYNAMIC_SEGMENT
+	number RSP_FB_SEGMENT
+	include "rsp_framebuffer.o"
 endseg
 
 beginwave
-    name "main"
-    include "code"
+	name "main"
+	include "code"
 	include "static"
-	include "dynamic"
+	include "rsp_framebuffer"
 endwave
 

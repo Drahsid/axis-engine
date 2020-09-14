@@ -2,7 +2,15 @@
 #define PRINTF_H
 
 #include <stdarg.h>
-#include "inttypes.h"
+#include <string.h>
+#include "stdint.h"
+
+/* TODO: this is a pretty meh system
+ * Ripped it from what I used for ModLoaderprint, made only a few changes
+ * There are possible performance issues as the number of strings on the stack increases
+ * If this ever becomes a problem, we could probably made a psuedo-object that also stores the pointer to the byte after the end of the previous message
+ * which would save time by not searching for the end of the message stack
+ */
 
 #define stdout (0x80740000)
 
