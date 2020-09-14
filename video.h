@@ -1,8 +1,8 @@
 #ifndef VIDEO_H
 #define VIDEO_H
 
-#define	SCREEN_HT   (320)
-#define	SCREEN_WD	(240)
+#define	SCREEN_HT   (240)
+#define	SCREEN_WD	(320)
 
 #define COLOR_DEPTH_TYPE unsigned short
 #define COLOR_DEPTH_SIZE (sizeof(COLOR_DEPTH_TYPE))
