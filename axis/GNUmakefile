@@ -2,13 +2,13 @@ include $(ROOT)/usr/include/make/PRdefs
 
 PRDEPTH = ../..
 
-FINAL = YES
+FINAL = NO
 ifeq ($(FINAL), YES)
-OPTIMIZER       = -O2 -std=gnu99
+OPTIMIZER       = -O1 -std=gnu11
 LCDEFS          = -DNDEBUG -D_FINALROM -DF3DEX_GBI_2
 N64LIB          = -lultra_rom
 else
-OPTIMIZER       = -g -std=gnu99
+OPTIMIZER       = -g -std=gnu11
 LCDEFS          = -DDEBUG -DF3DEX_GBI_2
 N64LIB          = -lultra_d
 endif
@@ -21,7 +21,7 @@ TEXHFILES =
 
 SPRITES =
 
-HFILES =	main.h inttypes.h video.h printf.h memory.h graphics.h
+HFILES =	main.h inttypes.h video.h printf.h graphics.h
 
 CODEFILES   =	main.c dram_stack.c
 
@@ -54,6 +54,6 @@ $(TARGETS) $(APP):      spec $(OBJECTS)
 	makemask $(TARGETS)
 else
 $(TARGETS) $(APP):      spec $(OBJECTS)
-	$(MAKEROM) -r $(TARGETS) -e $(APP) spec
+	$(MAKEROM) -s 9 -r $(TARGETS) -e $(APP) spec
+	makemask $(TARGETS)
 endif
-

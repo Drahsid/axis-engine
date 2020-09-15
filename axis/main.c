@@ -3,10 +3,10 @@
 #include <assert.h>
 
 #include "main.h"
-#include "video.h"
-#include "graphics.h"
 #include "printf.h"
+#include "video.h"
 #include "stdint.h"
+#include "graphics.h"
 
 extern char _codeSegmentEnd[];
 extern char _staticSegmentRomStart[], _staticSegmentRomEnd[];
@@ -53,7 +53,7 @@ void boot(void* arg)
 void idleproc(void* arg)
 {
     osCreateViManager(OS_PRIORITY_VIMGR);
-    osViSetMode(&osViModeTable[OS_VI_NTSC_LAN1]);
+    osViSetMode(&osViModeTable[OS_VI_NTSC_HPF1]);
 
     osViSetSpecialFeatures(OS_VI_GAMMA_OFF | OS_VI_GAMMA_DITHER_OFF);
     osViSetSpecialFeatures(OS_VI_DITHER_FILTER_ON);
@@ -104,7 +104,11 @@ void mainproc(void* arg)
 
 	printf("dma set up\n");
 
+	int frame = 0;
     for(;;) {
+
+		frame++;
+
 		Gfx shadetri_dl[] = {
 			gsSPMatrix(osVirtualToPhysical(&(g_graphics_context.view.dynamic.projection)), G_MTX_PROJECTION|G_MTX_LOAD|G_MTX_NOPUSH),
 			gsSPMatrix(osVirtualToPhysical(&(g_graphics_context.view.dynamic.modeling)), G_MTX_MODELVIEW|G_MTX_LOAD|G_MTX_NOPUSH),
@@ -124,8 +128,6 @@ void mainproc(void* arg)
 			1.0f, 10.0f, 1.0f);
 		guRotate(&g_graphics_context.view.dynamic.modeling, g_theta, 0.0f, 0.0f, 1.0f);
 
-		printf("ortho rot\n");
-
 		graphics_context_t_reset(&g_graphics_context, static_segment);
 
 		// do work
@@ -133,14 +135,10 @@ void mainproc(void* arg)
 
 		graphics_context_t_end(&g_graphics_context);
 
-		printf("graphics jobs done\n");
-
 		g_graphics_context.tlistp->t.ucode_boot = (uint64_t*)rspbootTextStart;
 		g_graphics_context.tlistp->t.ucode_boot_size = (uint32_t)rspbootTextEnd - (uint32_t)rspbootTextStart;
 
-		/*
-		* choose which ucode to run:
-		*/
+
 		if(g_graphics_context.ucode) {
 			g_graphics_context.tlistp->t.ucode = (uint64_t*)gspF3DEX2_fifoTextStart;
 			g_graphics_context.tlistp->t.ucode_data = (uint64_t*)gspF3DEX2_fifoDataStart;
@@ -153,16 +151,12 @@ void mainproc(void* arg)
 		g_graphics_context.tlistp->t.data_ptr = (uint64_t*)g_graphics_context.view.dynamic.glist;
 		g_graphics_context.tlistp->t.data_size = (uint32_t)((g_graphics_context.glistp - g_graphics_context.view.dynamic.glist) * sizeof(Gfx));
 
-		printf("tlistp done\n");
-
 		osWritebackDCache(&g_graphics_context.view.dynamic, sizeof(dynamic_t));
 
 		start_time = osGetTime();
 
 		osSpTaskStart(g_graphics_context.tlistp);
 		osRecvMesg(&rsp_message_queue, NULL, OS_MESG_BLOCK);
-
-		printf("task done\n");
 
 		g_graphics_context.rsp_ticks = osGetTime() - start_time;
 
@@ -172,12 +166,10 @@ void mainproc(void* arg)
 
 		graphics_context_t_swapfb(&g_graphics_context);
 
-		printf("fb swap\n");
-
 		if (MQ_IS_FULL(&g_graphics_context.vsync_message_queue)) osRecvMesg(&g_graphics_context.vsync_message_queue, NULL, OS_MESG_BLOCK);
 		osRecvMesg(&g_graphics_context.vsync_message_queue, NULL, OS_MESG_BLOCK);
 
 		g_theta += 1.0F;
-		printf("done!\n");
+		printf("FRAME: %d\n", frame);
     }
 }

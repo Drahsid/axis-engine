@@ -4,10 +4,9 @@
 #include <PR/gbi.h>
 #include <PR/os.h>
 #include <string.h>
-//#include "memory.h"
+
 #include "video.h"
 #include "stdint.h"
-#include "printf.h"
 
 typedef struct {
 	Mtx	projection;
@@ -33,7 +32,7 @@ typedef struct {
     OSMesg rdp_message_buffer, vsync_message_buffer;
     OSTask tlist;
 
-    COLOR_DEPTH_TYPE framebuffer[2][SCREEN_WD * SCREEN_HT];
+    COLOR_DEPTH_TYPE __attribute__((aligned(64))) framebuffer[2][SCREEN_WD * SCREEN_HT];
 
     view_t view;
 
@@ -49,7 +48,7 @@ typedef struct {
     uint8_t ucode;
     int rsp_ticks;
     int rdp_ticks;
-} graphics_context_t;
+} __attribute__((aligned (16))) graphics_context_t;
 
 void view_t_construct(view_t* view) {
     view->fov = 1.797689f;
@@ -72,7 +71,6 @@ void view_t_construct(view_t* view) {
 void graphics_context_t_construct(graphics_context_t* context) {
     volatile uint32_t i = 0;
 
-    printf("constructing graphics context\n");
     for (i; i < SCREEN_WD * SCREEN_HT; i++) {
         context->framebuffer[0][i] = 0;
         context->framebuffer[1][i] = 0;
@@ -97,9 +95,7 @@ void graphics_context_t_construct(graphics_context_t* context) {
         0
     };
 
-    printf("starting memcpy\n");
     memcpy(&context->tlist, &tlist, sizeof(OSTask));
-    printf("memcpy done\n");
 
     view_t_construct(&context->view);
 

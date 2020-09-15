@@ -4,11 +4,11 @@
 #include "video.h"
 #include "stdint.h"
 
-#define	STATIC_SEGMENT	1
-#define	RSP_FB_SEGMENT	2
+#define	STATIC_SEGMENT 1
+#define	RSP_FB_SEGMENT 2
 
-#define	STACKSIZE	0x2000
-#define STACKSIZE_NUM (STACKSIZE / sizeof(unsigned long long))
+#define	STACKSIZE 0x2000
+#define STACKSIZE_NUM (STACKSIZE / sizeof(uint64_t))
 
 #ifdef _LANGUAGE_C
 

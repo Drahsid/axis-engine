@@ -1,8 +1,6 @@
 #include "main.h"
 
-/*
- * ROM spec file
- */
+
 beginseg
 	name "code"
 	flags BOOT OBJECT
@@ -34,4 +32,3 @@ beginwave
 	include "static"
 	include "rsp_framebuffer"
 endwave
-
