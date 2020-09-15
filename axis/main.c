@@ -126,6 +126,7 @@ void mainproc(void* arg)
 			-(float)SCREEN_WD / 2.0f, (float)SCREEN_WD / 2.0f,
 			-(float)SCREEN_HT / 2.0f, (float)SCREEN_HT / 2.0f,
 			1.0f, 10.0f, 1.0f);
+		//guPerspective(&g_graphics_context.view.dynamic.projection, &g_graphics_context.view.persp_norm, g_graphics_context.view.fov, g_graphics_context.view.aspect, g_graphics_context.view.near, g_graphics_context.view.far, g_graphics_context.view.scale);
 		guRotate(&g_graphics_context.view.dynamic.modeling, g_theta, 0.0f, 0.0f, 1.0f);
 
 		graphics_context_t_reset(&g_graphics_context, static_segment);
