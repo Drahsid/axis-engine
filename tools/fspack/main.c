@@ -22,7 +22,7 @@ size_t align_size(size_t lhs, size_t modulo)
     return lhs + modulo - remainder;
 }
 
-uint64_t djb2_hash(const const char* input) {
+uint64_t djb2_hash(const char* input) {
     int index;
     uint64_t hash = 1337420;
 
@@ -37,18 +37,22 @@ typedef struct {
     void* file_buffer;
 } file_buffer_t;
 
-int generate_data(char* dir, archive_data_t* data, file_buffer_t* file_bufp) {
+int generate_data(char* full_dir, char* local_dir, archive_data_t* data, file_buffer_t* file_bufp) {
     struct dirent* dirfile;
     DIR* dir_ptr;
     FILE* file;
     int new_num;
     size_t file_size, initial_file_size;
     char new_dir[MAX_PATH];
+    char new_file_dir[MAX_PATH];
 
-    dir_ptr = opendir(dir);
+    memset(new_dir, '\0', MAX_PATH);
+    memset(new_file_dir, '\0', MAX_PATH);
+
+    dir_ptr = opendir(full_dir);
 
     if (dir_ptr == NULL) {
-        printf("error: failed to open directory %s\n", dir);
+        printf("error: failed to open directory %s\n", full_dir);
         return -1;
     }
 
@@ -58,13 +62,17 @@ int generate_data(char* dir, archive_data_t* data, file_buffer_t* file_bufp) {
         if (valid && dirfile->d_type != DT_DIR) {
             initial_file_size = 0;
 
-            strcpy(new_dir, dir);
+            strcpy(new_dir, full_dir);
             strcat(new_dir, "/");
             strcat(new_dir, dirfile->d_name);
 
+            strcpy(new_file_dir, local_dir);
+            strcat(new_file_dir, "/");
+            strcat(new_file_dir, dirfile->d_name);
+
             file = fopen(new_dir, "r");
             if (file != NULL) {
-                printf("\nopened file %s\n",  new_dir);
+                printf("\nopened file %s (local: %s)\n",  new_dir, new_file_dir);
 
                 fseek(file, 0, SEEK_END);
                 initial_file_size = ftell(file);
@@ -95,9 +103,9 @@ int generate_data(char* dir, archive_data_t* data, file_buffer_t* file_bufp) {
                 data->file_table_info.file_paths = realloc(data->file_table_info.file_paths, sizeof(char*) * new_num);
 
                 data->file_table_info.file_offsets[data->file_table_info.file_num] = data->archive_size;
-                data->file_table_info.file_hashes[data->file_table_info.file_num] = djb2_hash(new_dir);
-                data->file_table_info.file_paths[data->file_table_info.file_num] = malloc(strlen(new_dir) + 1);
-                strcpy(data->file_table_info.file_paths[data->file_table_info.file_num], new_dir);
+                data->file_table_info.file_hashes[data->file_table_info.file_num] = djb2_hash(new_file_dir);
+                data->file_table_info.file_paths[data->file_table_info.file_num] = malloc(strlen(new_file_dir) + 1);
+                strcpy(data->file_table_info.file_paths[data->file_table_info.file_num], new_file_dir);
 
                 data->archive_buffer = realloc(data->archive_buffer, data->archive_size + file_size + 1);
                 memcpy(((uint8_t*)data->archive_buffer) + data->archive_size, file_bufp->file_buffer, file_size);
@@ -107,18 +115,23 @@ int generate_data(char* dir, archive_data_t* data, file_buffer_t* file_bufp) {
                 printf("done\n\n");
             }
             else {
-                printf("Failed to open file: %s\n", new_dir);
+                printf("Failed to open file: %s\n", new_file_dir);
                 for(;;) {}
             }
 
             memset(new_dir, 0, MAX_PATH);
         }
         else if (valid && dirfile->d_type == DT_DIR) {
-            strcpy(new_dir, dir);
+            strcpy(new_dir, full_dir);
             strcat(new_dir, "/");
             strcat(new_dir, dirfile->d_name);
-            printf("\ndelving into dir %s\n\n", new_dir);
-            generate_data(new_dir, data, file_bufp);
+
+            strcpy(new_file_dir, local_dir);
+            strcat(new_file_dir, "/");
+            strcat(new_file_dir, dirfile->d_name);
+
+            printf("\ndelving into dir %s (local: %s)\n\n", new_dir, new_file_dir);
+            generate_data(new_dir, new_file_dir, data, file_bufp);
         }
     }
 
@@ -131,6 +144,9 @@ int main(int argc, char* argv[]) {
     file_buffer_t file_buf_object;
     char* directory = 0;
     char* out_file = 0;
+    char local_dir[MAX_PATH];
+
+    memset(local_dir, '\0', MAX_PATH);
 
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "-D") == 0 || strcmp(argv[i], "--directory") == 0) {
@@ -161,7 +177,7 @@ int main(int argc, char* argv[]) {
     archive_data_t_construct(&data);
     file_buf_object.file_buffer = malloc(0x16000);
 
-    generate_data(directory, &data, &file_buf_object);
+    generate_data(directory, local_dir, &data, &file_buf_object);
     archive_data_t_write_to_file(out_file, &data);
 
     printf("fspack finished\n");

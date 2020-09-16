@@ -68,6 +68,7 @@ void archive_data_t_write_to_file(char* out_file, archive_data_t* data) {
     for (i = 0; i < 4; i++) fputc(0, file);
 
     size_t file_num_bswap = __builtin_bswap64(data->file_table_info.file_num);
+    size_t archive_size_bswap = __builtin_bswap64(data->archive_size);
 
     fwrite(&file_num_bswap, sizeof(size_t), 1, file);
 
@@ -86,7 +87,7 @@ void archive_data_t_write_to_file(char* out_file, archive_data_t* data) {
 
     for (i = 0; i < 4; i++) fputc(0, file);
 
-    fwrite(&data->archive_size, sizeof(size_t), 1, file);
+    fwrite(&archive_size_bswap, sizeof(size_t), 1, file);
     fwrite(data->archive_buffer, sizeof(uint8_t), data->archive_size, file);
 
     fclose(file);

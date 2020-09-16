@@ -2,3 +2,5 @@
 *.out
 *.n64
 *.z64
+*.vscode
+/.vscode
