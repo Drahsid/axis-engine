@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "../OpenGL/axis-gl.h"
 
-#define SCALE_FACTOR 2
+#define SCALE_FACTOR 1
 #define SCREEN_WD 320 * SCALE_FACTOR
 #define SCREEN_HT 240 * SCALE_FACTOR
 

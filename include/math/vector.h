@@ -1,6 +1,18 @@
 #ifndef __AXIS_VECTOR_INCLUDED__
 #define __AXIS_VECTOR_INCLUDED__
 
+enum {
+    VEC2
+    , VEC3
+    , VEC4
+} VECTOR_DIM;
+
+enum {
+    FLOAT
+    , INT
+    , SHORT
+} VECTOR_TYPE;
+
 typedef struct {
     float x, y;
 } vec2f_t;
@@ -37,7 +49,7 @@ typedef struct {
     short x, y, z, w;
 } vec4s_t;
 
-void vec3f_t_construct(vec3f_t* xyz, float x, float y, float z) {
+static inline void vec3f_t_construct(vec3f_t* xyz, float x, float y, float z) {
     xyz->x = x;
     xyz->y = y;
     xyz->z = z;
