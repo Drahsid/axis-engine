@@ -45,12 +45,12 @@ $(CODESEGMENT):	$(CODEOBJECTS)
 
 ifeq ($(FINAL), YES)
 $(TARGETS) $(APP):      spec $(OBJECTS)
-	../tools/fspack/fspack -d ./filesystem -o filesystem.hfs
+	../tools/fspack/fspack -d ./filesystem -o filesystem.hfs -b
 	$(MAKEROM) -s $(ROMSIZE) -r $(TARGETS) -e $(APP) spec
 	makemask $(TARGETS)
 else
 $(TARGETS) $(APP):      spec $(OBJECTS)
-	../tools/fspack/fspack -d ./filesystem -o filesystem.hfs
+	../tools/fspack/fspack -d ./filesystem -o filesystem.hfs -b
 	$(MAKEROM) -s $(ROMSIZE) -r $(TARGETS) -e $(APP) spec
 	makemask $(TARGETS)
 endif

@@ -98,7 +98,7 @@ int generate_data(char* full_dir, char* local_dir, archive_data_t* data, file_bu
 
                 new_num = data->file_table_info.file_num + 1;
 
-                data->file_table_info.file_offsets = realloc(data->file_table_info.file_offsets, sizeof(size_t) * new_num);
+                data->file_table_info.file_offsets = realloc(data->file_table_info.file_offsets, sizeof(uint32_t) * new_num);
                 data->file_table_info.file_hashes = realloc(data->file_table_info.file_hashes, sizeof(uint64_t) * new_num);
                 data->file_table_info.file_paths = realloc(data->file_table_info.file_paths, sizeof(char*) * new_num);
 
@@ -145,6 +145,7 @@ int main(int argc, char* argv[]) {
     char* directory = 0;
     char* out_file = 0;
     char local_dir[MAX_PATH];
+    int byteswap = 0;
 
     memset(local_dir, '\0', MAX_PATH);
 
@@ -160,6 +161,12 @@ int main(int argc, char* argv[]) {
                 out_file = argv[i + 1];
             }
         }
+
+        if (strcmp(argv[i], "-b") == 0 || strcmp(argv[i], "-B") == 0|| strcmp(argv[i], "-byteswap") == 0)
+        {
+            byteswap = 1;
+        }
+
     }
 
     if (directory == 0) {
@@ -178,7 +185,7 @@ int main(int argc, char* argv[]) {
     file_buf_object.file_buffer = malloc(0x16000);
 
     generate_data(directory, local_dir, &data, &file_buf_object);
-    archive_data_t_write_to_file(out_file, &data);
+    archive_data_t_write_to_file(out_file, &data, byteswap);
 
     printf("fspack finished\n");
 

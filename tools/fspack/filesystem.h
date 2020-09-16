@@ -8,7 +8,7 @@
 
 typedef struct {
     size_t file_num;
-    size_t* file_offsets;
+    uint32_t* file_offsets;
     uint64_t* file_hashes;
     char** file_paths;
 } file_table_info_t;
@@ -35,9 +35,13 @@ void archive_data_t_construct(archive_data_t* archive_data) {
     archive_data->archive_buffer = malloc(sizeof(int));
 }
 
-void archive_data_t_write_to_file(char* out_file, archive_data_t* data) {
+void archive_data_t_write_to_file(char* out_file, archive_data_t* data, int byteswap) {
     FILE* file;
     int i = 0;
+    int pad = 0;
+    size_t file_num_bswap, archive_size_bswap;
+
+    printf("byteswapped? %d\n", byteswap);
 
     file = fopen(out_file, "w+");
 
@@ -50,42 +54,46 @@ void archive_data_t_write_to_file(char* out_file, archive_data_t* data) {
 
 
     for (i = 0; i < data->file_table_info.file_num; i++) {
-        printf("file %s has offset %llX\n", data->file_table_info.file_paths[i], data->file_table_info.file_offsets[i]);
+        printf("file %s has offset %X\n", data->file_table_info.file_paths[i], data->file_table_info.file_offsets[i]);
         printf("file %s has hash %llX\n", data->file_table_info.file_paths[i], data->file_table_info.file_hashes[i]);
     }
 
-    printf("archive data: \n");
+    /*printf("archive data: \n");
 
     for (i = 0; i < data->archive_size; i++) {
         printf("%X ", ((uint8_t*)data->archive_buffer)[i]);
-    }
+    }*/
 
     printf("\n");
 
-
-    //fprintf(file, data->header);
     fwrite(data->header, sizeof(uint8_t), 8, file);
-    for (i = 0; i < 4; i++) fputc(0, file);
+    fwrite(&pad, sizeof(int), 1, file);
 
-    size_t file_num_bswap = __builtin_bswap64(data->file_table_info.file_num);
-    size_t archive_size_bswap = __builtin_bswap64(data->archive_size);
+    file_num_bswap = data->file_table_info.file_num;
+    archive_size_bswap = data->archive_size;
+    if (byteswap) {
+        file_num_bswap = __builtin_bswap64(file_num_bswap);
+        archive_size_bswap = __builtin_bswap64(archive_size_bswap);
+    }
 
     fwrite(&file_num_bswap, sizeof(size_t), 1, file);
 
     for (i = 0; i < data->file_table_info.file_num; i++) {
-        data->file_table_info.file_offsets[i] = __builtin_bswap64(data->file_table_info.file_offsets[i]);
-        fwrite(&data->file_table_info.file_offsets[i], sizeof(size_t), 1, file);
+        if (byteswap) data->file_table_info.file_offsets[i] = __builtin_bswap32(data->file_table_info.file_offsets[i]);
+
+        fwrite(&data->file_table_info.file_offsets[i], sizeof(uint32_t), 1, file);
     }
 
     for (i = 0; i < data->file_table_info.file_num; i++) {
-        data->file_table_info.file_hashes[i] = __builtin_bswap64(data->file_table_info.file_hashes[i]);
+        if (byteswap) data->file_table_info.file_hashes[i] = __builtin_bswap64(data->file_table_info.file_hashes[i]);
+
         fwrite(&data->file_table_info.file_hashes[i], sizeof(uint64_t), 1, file);
     }
 
     //fwrite(data->file_table_info.file_offsets, sizeof(size_t), data->file_table_info.file_num, file);
     //fwrite(data->file_table_info.file_hashes, sizeof(uint64_t), data->file_table_info.file_num, file);
 
-    for (i = 0; i < 4; i++) fputc(0, file);
+    fwrite(&pad, sizeof(int), 1, file);
 
     fwrite(&archive_size_bswap, sizeof(size_t), 1, file);
     fwrite(data->archive_buffer, sizeof(uint8_t), data->archive_size, file);

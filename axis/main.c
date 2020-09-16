@@ -6,6 +6,7 @@
 #include "printf.h"
 #include "video.h"
 #include "stdint.h"
+#include "filesystem.h"
 #include "graphics.h"
 
 extern char _codeSegmentEnd[];
@@ -27,17 +28,14 @@ static uint64_t	main_thread_stack[STACKSIZE_NUM];
 static OSMesg pi_messages[NUM_PI_MSGS];
 static OSMesgQueue pi_message_queue;
 
-OSMesgQueue dma_message_queue, rsp_message_queue;
-OSMesg dma_message_buffer, rsp_message_buffer;
-OSIoMesg dma_io_message_buffer;
+OSMesgQueue rsp_message_queue;
+OSMesg rsp_message_buffer;
 
+filesystem_info_t g_filesystem;
 graphics_context_t g_graphics_context;
-float g_theta = 0.0f;
-
 OSPiHandle* g_handler;
 
-
-
+float g_theta = 0.0f;
 
 void boot(void* arg)
 {
@@ -79,7 +77,6 @@ void mainproc(void* arg)
 	graphics_context_t_construct(&g_graphics_context);
 	printf("gfx constructed\n");
 
-    osCreateMesgQueue(&dma_message_queue, &dma_message_buffer, 1);
     osCreateMesgQueue(&rsp_message_queue, &rsp_message_buffer, 1);
     osSetEventMesg(OS_EVENT_SP, &rsp_message_queue, NULL);
 
@@ -93,16 +90,12 @@ void mainproc(void* arg)
 
     static_segment = _codeSegmentEnd;
 
-    dma_io_message_buffer.hdr.pri      = OS_MESG_PRI_NORMAL;
-    dma_io_message_buffer.hdr.retQueue = &dma_message_queue;
-    dma_io_message_buffer.dramAddr     = static_segment;
-    dma_io_message_buffer.devAddr      = (uint32_t)_staticSegmentRomStart;
-    dma_io_message_buffer.size         = (uint32_t)_staticSegmentRomEnd - (uint32_t)_staticSegmentRomStart;
+	filesystem_info_t_construct(&g_filesystem, g_handler, static_segment);
+	printf("filesystem setup\n");
 
-    osEPiStartDma(g_handler, &dma_io_message_buffer, OS_READ);
-    osRecvMesg(&dma_message_queue, NULL, OS_MESG_BLOCK);
-
-	printf("dma set up\n");
+	char* sample_text = 0x80700000;
+	filesystem_info_t_read_file("/data/storytime/story.txt", sample_text, &g_filesystem);
+	printf("\n%s\n", sample_text);
 
 	int frame = 0;
     for(;;) {
@@ -171,6 +164,6 @@ void mainproc(void* arg)
 		osRecvMesg(&g_graphics_context.vsync_message_queue, NULL, OS_MESG_BLOCK);
 
 		g_theta += 1.0F;
-		printf("FRAME: %d\n", frame);
+		//printf("FRAME: %d\n", frame);
     }
 }

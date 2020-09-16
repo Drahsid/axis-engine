@@ -13,6 +13,7 @@ typedef unsigned int            uint32_t;
 typedef unsigned long long int  uint64_t;
 typedef int                     BOOL;
 
+
 typedef enum {
     false,
     true
@@ -28,6 +29,7 @@ typedef enum {
 #define uint16_t unsigned short int
 #define uint32_t unsigned int
 #define uint64_t unsigned long long
+#define size_t unsigned long long int
 #define BOOL int;
 
 #define true 1
