@@ -3,6 +3,7 @@
 #include <assert.h>
 
 #include "main.h"
+#include "heap.h"
 #include "printf.h"
 #include "video.h"
 #include "stdint.h"
@@ -34,6 +35,7 @@ OSMesg rsp_message_buffer;
 filesystem_info_t g_filesystem;
 graphics_context_t g_graphics_context;
 OSPiHandle* g_handler;
+uint32_t g_memory_size;
 
 float g_theta = 0.0f;
 
@@ -41,15 +43,48 @@ void boot(void* arg)
 {
     osInitialize();
 
+	g_memory_size = osGetMemSize();
     g_handler = osCartRomInit();
 
-	printf("booting\n");
+	printf("booted with %X memory\n", g_memory_size);
     osCreateThread(&idle_thread, 1, idleproc, 0, idle_thread_stack + STACKSIZE_NUM, 10);
     osStartThread(&idle_thread);
 }
 
 void idleproc(void* arg)
 {
+	g_heap_construct(0x80800000u - (g_memory_size / 4), g_memory_size / 4);
+	printf("Heap construct\n");
+
+	void** test[8];
+	test[0] = malloc(16);
+	test[1] = malloc(32);
+	test[2] = malloc(64);
+	test[3] = malloc(256);
+	test[4] = malloc(1024);
+	test[5] = malloc(2048);
+	test[6] = malloc(4096);
+	test[7] = malloc(8192);
+
+	printf("malloc test: ");
+
+	for (int i = 0; i < 8; i++) {
+		printf("%X, ", test[i]);
+		if (i % 2 == 1) {
+			free(test[i]);
+			test[i] = malloc(i * 512);
+		}
+	}
+
+	printf("\nevery other alloc'd data freed\n");
+
+	printf("malloc test: ");
+
+	for (int i = 0; i < 8; i++) {
+		printf("%X, ", test[i]);
+		if (i % 2 == 1) free(test[i]);
+	}
+
     osCreateViManager(OS_PRIORITY_VIMGR);
     osViSetMode(&osViModeTable[OS_VI_NTSC_HPF1]);
 
@@ -93,7 +128,7 @@ void mainproc(void* arg)
 	filesystem_info_t_construct(&g_filesystem, g_handler, static_segment);
 	printf("filesystem setup\n");
 
-	char* sample_text = 0x80700000;
+	char* sample_text = 0x80400000u;
 	filesystem_info_t_read_file("/data/storytime/story.txt", sample_text, &g_filesystem);
 	printf("\n%s\n", sample_text);
 
