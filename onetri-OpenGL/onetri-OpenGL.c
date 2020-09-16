@@ -1,6 +1,9 @@
 #include <stdio.h>
-#include "../video.h"
 #include "../OpenGL/axis-gl.h"
+
+#define SCALE_FACTOR 2
+#define SCREEN_WD 320 * SCALE_FACTOR
+#define SCREEN_HT 240 * SCALE_FACTOR
 
 typedef struct {
     float urx, ury;
@@ -19,30 +22,35 @@ axis_ortho_t ortho = (axis_ortho_t){
 };
 
 axis_vtx_t tri[4] = {
-    {-64.0f, 64.0f, 0.0f, 0.0f, 0.0f, 0, 255, 0, 255}
-    , {64.0f, 64.0f, 0.0f, 0.0f, 0.0f, 0, 0, 0, 255}
-    , {64.0f, -64.0f, 0.0f, 0.0f, 0.0f, 0, 0, 255, 255}
-    , {-64.0f, -64.0f, 0.0f, 0.0f, 0.0f, 255, 0, 0, 255}
+    {-64.0f * SCALE_FACTOR, 64.0f * SCALE_FACTOR, 0.0f * SCALE_FACTOR, 0.0f, 0.0f, 0, 255, 0, 255}
+    , {64.0f * SCALE_FACTOR, 64.0f * SCALE_FACTOR, 0.0f * SCALE_FACTOR, 0.0f, 0.0f, 0, 0, 0, 255}
+    , {64.0f * SCALE_FACTOR, -64.0f * SCALE_FACTOR, 0.0f * SCALE_FACTOR, 0.0f, 0.0f, 0, 0, 255, 255}
+    , {-64.0f * SCALE_FACTOR, -64.0f * SCALE_FACTOR, 0.0f * SCALE_FACTOR, 0.0f, 0.0f, 255, 0, 0, 255}
 };
 
-void drawInnerRect(void)
+void displayFrame(void)
 {
-    /* Blue Square */
-    rgba8_t innerRect = (rgba8_t){64, 64, 255, 255};
-    AxisGLSetFillColor(innerRect);
-    axis_rectangle_t inner_rect = (axis_rectangle_t){
-        ortho.r - 20, ortho.t - 20,
-        -(ortho.r - 20), -(ortho.t - 20)
-    };
-    glRectf(inner_rect.urx, inner_rect.ury, inner_rect.llx, inner_rect.lly);
-}
-
-void rotateTri(void)
-{
+    static unsigned int delta = 0;
     glClear(GL_COLOR_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
-    AxisGL2Triangles(tri, 0, 1, 2, 0, 0, 2, 3, 0);
-    glRotatef(0.02f, 0, 0, 1);
+
+    /* Inner Rectangle */
+    glPushMatrix();
+        glColor3f(0.25f, 0.25f, 1.0f);
+        axis_rectangle_t inner_rect = (axis_rectangle_t){
+            ortho.r - (20 * SCALE_FACTOR), ortho.t - (20 * SCALE_FACTOR),
+            -(ortho.r - (20 * SCALE_FACTOR)), -(ortho.t - (20 * SCALE_FACTOR))
+        };
+        glRectf(inner_rect.urx, inner_rect.ury, inner_rect.llx, inner_rect.lly);
+    glPopMatrix();
+
+    /* Rotating Quad Object */
+    glPushMatrix();
+        glRotatef(0.02f * delta, 0, 0, 1);
+        AxisGL2Triangles(tri, 0, 1, 2, 0, 0, 2, 3, 0);
+        delta++;
+    glPopMatrix();
+    
     glFlush();
 }
 
@@ -55,10 +63,10 @@ int main (int argc, char** argv)
     rgbaf_t bg_color = (rgbaf_t){0.25f, 0.25f, 0.25f, 1.0f};
     InitializeOrthoWindow("onetri-OpenGL", vp, ortho, bg_color);
 
-    drawInnerRect();
+    //drawInnerRect();
 
     /* Draw and Rotate */
-    glutIdleFunc(rotateTri);
+    glutIdleFunc(displayFrame);
 
     glutMainLoop();
 }
