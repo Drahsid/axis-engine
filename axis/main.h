@@ -6,6 +6,7 @@
 
 #define	STATIC_SEGMENT 1
 #define	RSP_FB_SEGMENT 2
+#define FILESYSTEM_SEGMENT 3
 
 #define	STACKSIZE 0x2000
 #define STACKSIZE_NUM (STACKSIZE / sizeof(uint64_t))

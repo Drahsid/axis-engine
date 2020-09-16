@@ -164,12 +164,12 @@ int main(int argc, char* argv[]) {
 
     if (directory == 0) {
         printf("error: no input directory! use -d [dir] to choose a directory!\n");
-        return 0;
+        return 1;
     }
 
     if (out_file == 0) {
         printf("error: no output file! use -o [file] to choose a file!\n");
-        return 0;
+        return 1;
     }
 
     printf("using directory %s\n", directory);
@@ -192,5 +192,5 @@ int main(int argc, char* argv[]) {
     free(data.file_table_info.file_hashes);
     free(data.file_table_info.file_offsets);
     free(file_buf_object.file_buffer);
-    return 1;
+    return 0;
 }

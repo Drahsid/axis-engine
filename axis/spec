@@ -26,9 +26,17 @@ beginseg
 	include "rsp_framebuffer.o"
 endseg
 
+beginseg
+	name "filesystem"
+	flags RAW
+	number FILESYSTEM_SEGMENT
+	include "filesystem.hfs"
+endseg
+
 beginwave
 	name "main"
 	include "code"
 	include "static"
 	include "rsp_framebuffer"
+	include "filesystem"
 endwave
