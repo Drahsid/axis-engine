@@ -246,6 +246,27 @@ uint32_t heap_get_free(heap_t* heap) {
         total += block->free;
         block = block->free_next;
     }
+
+    return total;
+}
+
+heap_block_t* heap_get_largest_free(heap_t* heap) {
+    uint32_t largest = 0;
+    heap_block_t* block;
+    heap_block_t* largest_block;
+
+    while (block)
+    {
+        if (block->free >= largest) {
+            largest = block->free;
+            largest_block = block;
+        }
+
+
+        block = block->free_next;
+    }
+
+    return largest_block;
 }
 
 #define malloc(size) heap_alloc(g_heap, size)

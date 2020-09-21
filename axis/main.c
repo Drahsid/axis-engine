@@ -85,6 +85,12 @@ void idleproc(void* arg)
 		if (i % 2 == 1) free(test[i]);
 	}
 
+	printf("\nheap space left before: %X\n", heap_get_free(g_heap));
+	int* a = malloc(HEAP_ALIGN(heap_get_largest_free(g_heap)->free - HEAP_BLOCK_ALIGNMENT));
+	printf("heap space left after: %X\n", heap_get_free(g_heap));
+	free(a);
+	printf("and freed: %X\n", heap_get_free(g_heap));
+
     osCreateViManager(OS_PRIORITY_VIMGR);
     osViSetMode(&osViModeTable[OS_VI_NTSC_HPF1]);
 
