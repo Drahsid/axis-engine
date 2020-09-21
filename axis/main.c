@@ -53,37 +53,8 @@ void boot(void* arg)
 
 void idleproc(void* arg)
 {
-	heap_construct(0x80800000u - (g_memory_size / 4), g_memory_size / 4);
+	heap_construct(0x80800000u - (g_memory_size / 2), g_memory_size / 2);
 	printf("heap construct\n");
-
-	void** test[8];
-	test[0] = malloc(16);
-	test[1] = malloc(32);
-	test[2] = malloc(64);
-	test[3] = malloc(256);
-	test[4] = malloc(1024);
-	test[5] = malloc(2048);
-	test[6] = malloc(4096);
-	test[7] = malloc(8192);
-
-	printf("malloc test: ");
-
-	for (int i = 0; i < 8; i++) {
-		printf("%X, ", test[i]);
-		if (i % 2 == 1) {
-			free(test[i]);
-			test[i] = malloc(i * 512);
-		}
-	}
-
-	printf("\nevery other alloc'd data freed\n");
-
-	printf("malloc test: ");
-
-	for (int i = 0; i < 8; i++) {
-		printf("%X, ", test[i]);
-		if (i % 2 == 1) free(test[i]);
-	}
 
     osCreateViManager(OS_PRIORITY_VIMGR);
     osViSetMode(&osViModeTable[OS_VI_NTSC_HPF1]);
