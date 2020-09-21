@@ -53,8 +53,8 @@ void boot(void* arg)
 
 void idleproc(void* arg)
 {
-	g_heap_construct(0x80800000u - (g_memory_size / 4), g_memory_size / 4);
-	printf("Heap construct\n");
+	heap_construct(0x80800000u - (g_memory_size / 4), g_memory_size / 4);
+	printf("heap construct\n");
 
 	void** test[8];
 	test[0] = malloc(16);
@@ -109,7 +109,7 @@ void mainproc(void* arg)
     char* static_segment;
     OSTime start_time;
 
-	graphics_context_t_construct(&g_graphics_context);
+	graphics_context_construct(&g_graphics_context);
 	printf("gfx constructed\n");
 
     osCreateMesgQueue(&rsp_message_queue, &rsp_message_buffer, 1);
@@ -125,11 +125,11 @@ void mainproc(void* arg)
 
     static_segment = _codeSegmentEnd;
 
-	filesystem_info_t_construct(&g_filesystem, g_handler, static_segment);
+	filesystem_info_construct(&g_filesystem, g_handler, static_segment);
 	printf("filesystem setup\n");
 
 	char* sample_text = 0x80400000u;
-	filesystem_info_t_read_file("/data/storytime/story.txt", sample_text, &g_filesystem);
+	filesystem_info_read_file("/data/storytime/story.txt", sample_text, &g_filesystem);
 	printf("\n%s\n", sample_text);
 
 	int frame = 0;
@@ -157,12 +157,12 @@ void mainproc(void* arg)
 		//guPerspective(&g_graphics_context.view.dynamic.projection, &g_graphics_context.view.persp_norm, g_graphics_context.view.fov, g_graphics_context.view.aspect, g_graphics_context.view.near, g_graphics_context.view.far, g_graphics_context.view.scale);
 		guRotate(&g_graphics_context.view.dynamic.modeling, g_theta, 0.0f, 0.0f, 1.0f);
 
-		graphics_context_t_reset(&g_graphics_context, static_segment);
+		graphics_context_reset(&g_graphics_context, static_segment);
 
 		// do work
 		gSPDisplayList(g_graphics_context.glistp++, shadetri_dl);
 
-		graphics_context_t_end(&g_graphics_context);
+		graphics_context_end(&g_graphics_context);
 
 		g_graphics_context.tlistp->t.ucode_boot = (uint64_t*)rspbootTextStart;
 		g_graphics_context.tlistp->t.ucode_boot_size = (uint32_t)rspbootTextEnd - (uint32_t)rspbootTextStart;
@@ -193,7 +193,7 @@ void mainproc(void* arg)
 
 		g_graphics_context.rdp_ticks = osGetTime() - start_time ;
 
-		graphics_context_t_swapfb(&g_graphics_context);
+		graphics_context_swapfb(&g_graphics_context);
 
 		if (MQ_IS_FULL(&g_graphics_context.vsync_message_queue)) osRecvMesg(&g_graphics_context.vsync_message_queue, NULL, OS_MESG_BLOCK);
 		osRecvMesg(&g_graphics_context.vsync_message_queue, NULL, OS_MESG_BLOCK);
