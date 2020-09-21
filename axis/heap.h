@@ -231,6 +231,26 @@ void heap_free(heap_t* heap, void* address) {
     }
 }
 
+void* heap_realloc(heap_t* heap, void* address, uint32_t size) {
+    heap_block_t* block;
+    heap_block_t* new_block;
+
+    size = HEAP_ALIGN(size);
+    block = ((uint32_t)address) - HEAP_BLOCK_HEADER_SIZE;
+
+    if (size <= block->used || block->free >= size - block->used) {
+        return ((uint32_t)block) + HEAP_BLOCK_HEADER_SIZE;
+    }
+    else {
+        new_block = heap_alloc(heap, size);
+        memcpy(new_block, address, block->used);
+        heap_free(heap, address);
+        return new_block;
+    }
+
+    return 0;
+}
+
 void heap_wipe(heap_t* heap) {
     while (heap->used_head->used_next) {
         heap_free(heap, (void*)(((uint32_t)heap->used_head->used_next) + HEAP_BLOCK_HEADER_SIZE));
@@ -272,6 +292,7 @@ heap_block_t* heap_get_largest_free(heap_t* heap) {
 #define malloc(size) heap_alloc(g_heap, size)
 #define malloc_tail(size) heap_alloc_tail(g_heap, size)
 #define free(address) heap_free(g_heap, address)
+#define realloc(address, size) heap_realloc(g_heap, address, size)
 
 #endif
 
