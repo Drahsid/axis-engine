@@ -50,7 +50,7 @@ typedef struct {
     int rdp_ticks;
 } __attribute__((aligned (16))) graphics_context_t;
 
-void view_t_construct(view_t* view) {
+void view_construct(view_t* view) {
     view->fov = 1.797689f;
     view->aspect = SCREEN_WD / SCREEN_HT;
     view->near = 0.01f;
@@ -68,7 +68,7 @@ void view_t_construct(view_t* view) {
     view->viewport.vp.vtrans[3] = 0;
 }
 
-void graphics_context_t_construct(graphics_context_t* context) {
+void graphics_context_construct(graphics_context_t* context) {
     volatile uint32_t i = 0;
 
     for (i; i < SCREEN_WD * SCREEN_HT; i++) {
@@ -97,7 +97,7 @@ void graphics_context_t_construct(graphics_context_t* context) {
 
     memcpy(&context->tlist, &tlist, sizeof(OSTask));
 
-    view_t_construct(&context->view);
+    view_construct(&context->view);
 
     Gfx rsp_init[] = {
         gsSPViewport(&context->view.viewport),
@@ -152,7 +152,7 @@ void graphics_context_t_construct(graphics_context_t* context) {
     context->rdp_ticks = 0;
 }
 
-void graphics_context_t_reset(graphics_context_t* context, char* static_segment) {
+void graphics_context_reset(graphics_context_t* context, char* static_segment) {
     context->tlistp = &context->tlist;
     context->glistp = &context->view.dynamic.glist[0];
 
@@ -165,12 +165,12 @@ void graphics_context_t_reset(graphics_context_t* context, char* static_segment)
     gSPDisplayList(context->glistp++, context->clear_fb);
 }
 
-void graphics_context_t_end(graphics_context_t* context) {
+void graphics_context_end(graphics_context_t* context) {
     gDPFullSync(context->glistp++);
     gSPEndDisplayList(context->glistp++);
 }
 
-void graphics_context_t_swapfb(graphics_context_t* context) {
+void graphics_context_swapfb(graphics_context_t* context) {
     osViSwapBuffer(context->framebuffer[context->current_fb]);
     context->current_fb = 1 - context->current_fb;
 }

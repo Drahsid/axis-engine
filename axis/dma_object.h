@@ -14,7 +14,7 @@ typedef struct
     OSIoMesg dma_io_message_buffer;
 } dma_object_t;
 
-void dma_object_t_construct(dma_object_t* dma_obj, OSPiHandle* handler, char* segment) {
+void dma_object_construct(dma_object_t* dma_obj, OSPiHandle* handler, char* segment) {
     osCreateMesgQueue(&dma_obj->dma_message_queue, &dma_obj->dma_message_buffer, 1);
 
     dma_obj->dma_io_message_buffer.hdr.pri = OS_MESG_PRI_NORMAL;
@@ -27,12 +27,12 @@ void dma_object_t_construct(dma_object_t* dma_obj, OSPiHandle* handler, char* se
     osRecvMesg(&dma_obj->dma_message_queue, NULL, OS_MESG_BLOCK);
 }
 
-void dma_object_t_read_rom(dma_object_t* dma_obj, uint32_t src, void* dest, uint32_t length) {
+void dma_object_read_rom(dma_object_t* dma_obj, uint32_t src, void* dest, uint32_t length) {
     while (osPiStartDma(&dma_obj->dma_io_message_buffer, 1, OS_READ, src, dest, length, &dma_obj->dma_message_queue) == -1) {}
     osRecvMesg(&dma_obj->dma_message_queue, NULL, OS_MESG_BLOCK);
 }
 
-void dma_object_t_read_rom_with_pri(dma_object_t* dma_obj, uint32_t src, void* dest, uint32_t length, int priority) {
+void dma_object_read_rom_with_pri(dma_object_t* dma_obj, uint32_t src, void* dest, uint32_t length, int priority) {
     while (osPiStartDma(&dma_obj->dma_io_message_buffer, priority, OS_READ, src, dest, length, &dma_obj->dma_message_queue) == -1) {}
     osRecvMesg(&dma_obj->dma_message_queue, NULL, OS_MESG_BLOCK);
 }
