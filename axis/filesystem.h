@@ -4,6 +4,7 @@
 #include <ultra64.h>
 #include <string.h>
 #include "dma_object.h"
+#include "heap.h"
 #include "stdint.h"
 #include "printf.h"
 
@@ -43,19 +44,17 @@ const char* g_filesystem_good_header = "hash_fs";
 typedef struct
 {
     dma_object_t dma_obj;
-    char header[8];
-    uint64_t num_files __attribute__((aligned (8)));
-    uint64_t archive_size __attribute__((aligned (8)));
-    uint32_t fs_addr;
-    uint32_t file_offsets;
-    uint32_t file_hashes;
+    char header[8] __attribute__((aligned(8)));
+    uint64_t num_files __attribute__((aligned(8)));
+    uint64_t archive_size __attribute__((aligned(8)));
+    uint32_t fs_addr __attribute__((aligned(8)));
     uint32_t archive;
-} filesystem_info_t __attribute__((aligned (16)));
+    uint32_t* file_offsets;
+    uint64_t* file_hashes;
+} filesystem_info_t __attribute__((aligned(16)));
 
-void filesystem_info_construct(filesystem_info_t* filesystem, OSPiHandle* handler, char* segment) {
-    uint8_t read_in_data[8] __attribute__((aligned (8)));
-    uint32_t i = 0;
-    uint32_t q = 0;
+void filesystem_info_construct(filesystem_info_t* filesystem, OSPiHandle* handler, char* segment0, char* segment1) {
+    uint32_t offset_addr = 0;
 
     filesystem->fs_addr = NULL;
     strcpy(filesystem->header, "BADBAD!");
@@ -65,88 +64,87 @@ void filesystem_info_construct(filesystem_info_t* filesystem, OSPiHandle* handle
     filesystem->archive_size = 0;
     filesystem->archive = NULL;
 
-    dma_object_construct(&filesystem->dma_obj, handler, segment);
+    dma_object_construct(&filesystem->dma_obj, handler, segment0);
 
     osInvalDCache(filesystem, sizeof(filesystem));
-
-    // TODO: Find from segment, this is BAD
-    for (i = 0x1500; filesystem->fs_addr == 0; i += 8) {
-        //TODO: wrap this into a dma_object function
-        dma_object_read_rom(&filesystem->dma_obj, i, read_in_data, 8);
-
-        if (strcmp(read_in_data, g_filesystem_good_header) == 0) {
-            if (q == 0) {
-                q++;
-            }
-            else {
-                filesystem->fs_addr = i;
-                printf("Found filesystem at %X\n", i);
-                break;
-            }
-        }
-    }
-
-    if (filesystem->fs_addr == NULL) {
-        printf("error: failed to find filesystem in rom!\n");
-        for(;;);
-    }
+    filesystem->fs_addr = segment1;
 
     // 0x00 -> 0x08 = header
-    strcpy(filesystem->header, read_in_data);
-    i = filesystem->fs_addr + 0xCu; // 0x08 -> 0x0C = pad, so we skip it
+    dma_object_read_rom(&filesystem->dma_obj, filesystem->fs_addr, filesystem->header, 8);
+    offset_addr = filesystem->fs_addr + 0xCu; // 0x08 -> 0x0C = pad, so we skip it
 
-    dma_object_read_rom(&filesystem->dma_obj, i, &filesystem->num_files, sizeof(uint64_t));
-    i += sizeof(uint64_t); // 0x0C -> 0x14 = num files
+    dma_object_read_rom(&filesystem->dma_obj, offset_addr, &filesystem->num_files, sizeof(uint64_t));
+    offset_addr += sizeof(uint64_t); // 0x0C -> 0x14 = num files
 
-    filesystem->file_offsets = i;
-    i += (sizeof(uint32_t) * filesystem->num_files); // file offsets are 4 bytes each
+    // file offsets are 4 bytes each
+    filesystem->file_offsets = malloc(sizeof(uint32_t) * filesystem->num_files + HEAP_BLOCK_ALIGNMENT);
+    dma_object_read_rom(&filesystem->dma_obj, offset_addr, filesystem->file_offsets, sizeof(uint32_t) * filesystem->num_files);
+    offset_addr += (sizeof(uint32_t) * filesystem->num_files);
 
-    filesystem->file_hashes = i;
-    i += (sizeof(uint64_t) * filesystem->num_files) + 4; // file hashes are 8 bytes each, then there is 4 bytes of padding
+    // file hashes are 8 bytes each, then there is 4 bytes of padding
+    filesystem->file_hashes = malloc(sizeof(uint64_t) * filesystem->num_files + HEAP_BLOCK_ALIGNMENT);
+    dma_object_read_rom(&filesystem->dma_obj, offset_addr, filesystem->file_hashes, sizeof(uint64_t) * filesystem->num_files);
+    offset_addr += (sizeof(uint64_t) * filesystem->num_files) + 4;
 
-    filesystem->archive = (i + sizeof(uint64_t)); // the archive size is stored in 8 bytes
-    dma_object_read_rom(&filesystem->dma_obj, i, &filesystem->archive_size, 8);
+    filesystem->archive = (offset_addr + sizeof(uint64_t)); // the archive size is stored in 8 bytes
+    dma_object_read_rom(&filesystem->dma_obj, offset_addr, &filesystem->archive_size, 8);
 
-    printf("Filesystem info\nheader: %s, num files: %llu, offsets address: %X, hashes address: %X, size: %llX, data address: %X\n",
-        filesystem->header, filesystem->num_files, filesystem->file_offsets, filesystem->file_hashes, filesystem->archive_size, filesystem->archive);
+    printf("Filesystem info\nheader: %s, num files: %llu, size: %llX, data address: %X\n", filesystem->header, filesystem->num_files, filesystem->archive_size, filesystem->archive);
 }
 
 // index == num_files on fail
-uint32_t filesystem_info_get_index_from_hash(uint64_t hash, filesystem_info_t* filesystem) {
-    uint32_t index = 0;
-    uint64_t rhash __attribute__((aligned (8))) = 0;
+uint32_t filesystem_info_get_index_from_hash(filesystem_info_t* filesystem, uint64_t hash) {
+    uint32_t index;
 
-    // TODO: malloc room for offsets and hashes and store them in rdram upon construction of filesystem_info_t
     for (index = 0; index < filesystem->num_files; index++) {
-        dma_object_read_rom(&filesystem->dma_obj, filesystem->file_hashes + (index * sizeof(uint64_t)), &rhash, sizeof(uint64_t));
-        if (rhash == hash) return index;
+        if (filesystem->file_hashes[index] == hash) return index;
     }
 
     return index;
 }
 
-uint32_t filesystem_info_get_offset_from_index(uint32_t index, filesystem_info_t* filesystem) {
-    uint32_t offset __attribute__((aligned (8))) = 0;
-
-    dma_object_read_rom(&filesystem->dma_obj, filesystem->file_offsets + (index * sizeof(uint32_t)), &offset, sizeof(uint32_t));
-
-    return offset;
+uint32_t filesystem_info_get_offset_from_index(filesystem_info_t* filesystem, uint32_t index) {
+    return filesystem->file_offsets[index];
 }
 
-void* filesystem_info_read_file(const char* file, void* dest, filesystem_info_t* filesystem) {
-    uint64_t file_size = 0;
+uint32_t filesystem_info_get_file_size(filesystem_info_t* filesystem, const char* file) {
     uint64_t hash = djb2_hash(file);
-    uint32_t index = filesystem_info_get_index_from_hash(hash, filesystem);
+    uint32_t index = filesystem_info_get_index_from_hash(filesystem, hash);
+    uint32_t file_size = 0;
     uint32_t offset = 0;
 
     if (index < filesystem->num_files) {
         if (index == (filesystem->num_files - 1)) {
-            offset = filesystem_info_get_offset_from_index(index, filesystem);
+            offset = filesystem_info_get_offset_from_index(filesystem, index);
             file_size = filesystem->archive_size - offset;
         }
         else {
-            offset = filesystem_info_get_offset_from_index(index, filesystem);
-            file_size = filesystem_info_get_offset_from_index(index + 1, filesystem) - offset;
+            offset = filesystem_info_get_offset_from_index(filesystem, index);
+            file_size = filesystem_info_get_offset_from_index(filesystem, index + 1) - offset;
+        }
+    }
+    else {
+        printf("File %s not found!\n", file);
+        return NULL;
+    }
+
+    return file_size;
+}
+
+void filesystem_info_read_file(filesystem_info_t* filesystem, const char* file, void* dest) {
+    uint64_t hash = djb2_hash(file);
+    uint32_t index = filesystem_info_get_index_from_hash(filesystem, hash);
+    uint32_t file_size = 0;
+    uint32_t offset = 0;
+
+    if (index < filesystem->num_files) {
+        if (index == (filesystem->num_files - 1)) {
+            offset = filesystem_info_get_offset_from_index(filesystem, index);
+            file_size = filesystem->archive_size - offset;
+        }
+        else {
+            offset = filesystem_info_get_offset_from_index(filesystem, index);
+            file_size = filesystem_info_get_offset_from_index(filesystem, index + 1) - offset;
         }
 
         osInvalDCache(dest, file_size);
@@ -154,8 +152,36 @@ void* filesystem_info_read_file(const char* file, void* dest, filesystem_info_t*
     }
     else {
         printf("File %s not found!\n", file);
+    }
+}
+
+void* filesystem_info_alloc_and_read_file(filesystem_info_t* filesystem, const char* file) {
+    uint64_t hash = djb2_hash(file);
+    uint32_t index = filesystem_info_get_index_from_hash(filesystem, hash);
+    uint32_t file_size = 0;
+    uint32_t offset = 0;
+    void* dest = NULL;
+
+    if (index < filesystem->num_files) {
+        if (index == (filesystem->num_files - 1)) {
+            offset = filesystem_info_get_offset_from_index(filesystem, index);
+            file_size = filesystem->archive_size - offset;
+        }
+        else {
+            offset = filesystem_info_get_offset_from_index(filesystem, index);
+            file_size = filesystem_info_get_offset_from_index(filesystem, index + 1) - offset;
+        }
+
+        dest = malloc(file_size);
+        osInvalDCache(dest, file_size);
+        dma_object_read_rom(&filesystem->dma_obj, filesystem->archive + offset, dest, file_size);
+    }
+    else {
+        printf("File %s not found!\n", file);
         return NULL;
     }
+
+    return dest;
 }
 
 #endif

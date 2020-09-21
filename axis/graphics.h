@@ -48,7 +48,7 @@ typedef struct {
     uint8_t ucode;
     int rsp_ticks;
     int rdp_ticks;
-} __attribute__((aligned (16))) graphics_context_t;
+} __attribute__((aligned(16))) graphics_context_t;
 
 void view_construct(view_t* view) {
     view->fov = 1.797689f;

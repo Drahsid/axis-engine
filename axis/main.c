@@ -3,15 +3,16 @@
 #include <assert.h>
 
 #include "main.h"
-#include "heap.h"
 #include "printf.h"
 #include "video.h"
 #include "stdint.h"
+#include "heap.h"
 #include "filesystem.h"
 #include "graphics.h"
 
 extern char _codeSegmentEnd[];
 extern char _staticSegmentRomStart[], _staticSegmentRomEnd[];
+extern char _filesystemSegmentRomStart[], _filesystemSegmentRomEnd[];
 
 uint64_t g_boot_stack[STACKSIZE_NUM];
 
@@ -76,9 +77,8 @@ void idleproc(void* arg)
 
 void mainproc(void* arg)
 {
+	OSTime start_time;
 	printf("mainproc go vroom\n");
-    char* static_segment;
-    OSTime start_time;
 
 	graphics_context_construct(&g_graphics_context);
 	printf("gfx constructed\n");
@@ -94,18 +94,14 @@ void mainproc(void* arg)
 
 	printf("events setup\n");
 
-    static_segment = _codeSegmentEnd;
-
-	filesystem_info_construct(&g_filesystem, g_handler, static_segment);
+	filesystem_info_construct(&g_filesystem, g_handler, _codeSegmentEnd, _filesystemSegmentRomStart);
 	printf("filesystem setup\n");
 
-	char* sample_text = 0x80400000u;
-	filesystem_info_read_file("/data/storytime/story.txt", sample_text, &g_filesystem);
+	char* sample_text = filesystem_info_alloc_and_read_file(&g_filesystem, "/data/storytime/story.txt");
 	printf("\n%s\n", sample_text);
 
 	int frame = 0;
     for(;;) {
-
 		frame++;
 
 		Gfx shadetri_dl[] = {
@@ -128,7 +124,7 @@ void mainproc(void* arg)
 		//guPerspective(&g_graphics_context.view.dynamic.projection, &g_graphics_context.view.persp_norm, g_graphics_context.view.fov, g_graphics_context.view.aspect, g_graphics_context.view.near, g_graphics_context.view.far, g_graphics_context.view.scale);
 		guRotate(&g_graphics_context.view.dynamic.modeling, g_theta, 0.0f, 0.0f, 1.0f);
 
-		graphics_context_reset(&g_graphics_context, static_segment);
+		graphics_context_reset(&g_graphics_context, _codeSegmentEnd);
 
 		// do work
 		gSPDisplayList(g_graphics_context.glistp++, shadetri_dl);

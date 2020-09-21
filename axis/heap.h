@@ -120,7 +120,7 @@ void* heap_alloc(heap_t* heap, uint32_t size) {
     return NULL;
 }
 
-void heap_alloc_tail(heap_t* heap, uint32_t size) {
+void* heap_alloc_tail(heap_t* heap, uint32_t size) {
     heap_block_t* block;
     heap_block_t* new_block;
 
@@ -239,7 +239,7 @@ void* heap_realloc(heap_t* heap, void* address, uint32_t size) {
     block = ((uint32_t)address) - HEAP_BLOCK_HEADER_SIZE;
 
     if (size <= block->used || block->free >= size - block->used) {
-        return ((uint32_t)block) + HEAP_BLOCK_HEADER_SIZE;
+        return (void*)(((uint32_t)block) + HEAP_BLOCK_HEADER_SIZE);
     }
     else {
         new_block = heap_alloc(heap, size);
