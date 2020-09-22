@@ -7,12 +7,12 @@ ifeq ($(FINAL), YES)
 OPTIMIZE	=	-O1 -std=gnu11
 LCDEFS		=	-DNDEBUG -D_FINALROM -DF3DEX_GBI_2
 N64LIB		=	-lultra_rom
-ROMSIZE		=	16
+ROMSIZE		=	33
 else
 OPTIMIZER	=	-g -std=gnu11
 LCDEFS		=	-DDEBUG -DF3DEX_GBI_2
 N64LIB		=	-lultra_d
-ROMSIZE		=	64
+ROMSIZE		=	33
 endif
 
 APP			=	main.out

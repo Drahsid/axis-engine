@@ -44,14 +44,14 @@ void boot(void* arg)
 	g_memory_size = osGetMemSize();
 
 	printf("booted with %X memory\n", g_memory_size);
-    osCreateThread(&g_threads[THREAD_IDLE], THREAD_IDLE + 1, idleproc, arg, g_stacks[THREAD_IDLE] + STACKSIZE_NUM, 10);
+    osCreateThread(&g_threads[THREAD_IDLE], THREAD_IDLE + 1, idleproc, arg, ((uint8_t*)&g_stacks[THREAD_IDLE][0]) + STACKSIZE, 10);
     osStartThread(&g_threads[THREAD_IDLE]);
 }
 
 void idleproc(void* arg)
 {
-	heap_construct(0x80800000u - (g_memory_size / 2), g_memory_size / 2);
-	printf("heap construct\n");
+	heap_construct(0x80000000u + (g_memory_size / 2), g_memory_size / 2);
+	printf("heap construct at %X with %X space\n", g_heap_start, g_heap_size);
 
 	osCreatePiManager(OS_PRIORITY_PIMGR, &g_pi_message_queue, g_pi_messages, NUM_PI_MSGS);
 
@@ -259,38 +259,22 @@ void drawproc(void* arg) {
 		}
 
 		guPerspective(&g_graphics_context.view.dynamic.projection, &g_graphics_context.view.persp_norm, g_graphics_context.view.fov, g_graphics_context.view.aspect, g_graphics_context.view.near, g_graphics_context.view.far, g_graphics_context.view.scale);
-		guLookAt(&g_graphics_context.view.dynamic.viewing,
+		gSPPerspNormalize(g_graphics_context.glistp++, g_graphics_context.view.persp_norm);
+		guLookAt(
+			&g_graphics_context.view.dynamic.viewing,
 			px, py, pz, // eye
 			px + ex, py + ey, pz + ez, // at / focus
 			ux, uy, uz // up
 			/*0, 1.0f, 0*/
-			);
-
-		gSPPerspNormalize(g_graphics_context.glistp++, g_graphics_context.view.persp_norm);
+		);
 
 		graphics_context_reset(&g_graphics_context, _codeSegmentEnd);
 
-		// do work
+		// this would be where we actually draw stuff
 		gSPDisplayList(g_graphics_context.glistp++, shadetri_dl);
 
 		graphics_context_end(&g_graphics_context);
-
-		// set up task list
-		g_graphics_context.tlistp->t.ucode_boot = (uint64_t*)rspbootTextStart;
-		g_graphics_context.tlistp->t.ucode_boot_size = (uint32_t)rspbootTextEnd - (uint32_t)rspbootTextStart;
-
-		if(g_graphics_context.ucode) {
-			g_graphics_context.tlistp->t.ucode = (uint64_t*)gspF3DEX2_fifoTextStart;
-			g_graphics_context.tlistp->t.ucode_data = (uint64_t*)gspF3DEX2_fifoDataStart;
-			g_graphics_context.tlistp->t.output_buff_size = (uint64_t*)((int)rdp_output + (int)(RDP_OUTPUT_LEN * sizeof(uint64_t)));
-		} else {
-			g_graphics_context.tlistp->t.ucode = (uint64_t*)gspF3DEX2_xbusTextStart;
-			g_graphics_context.tlistp->t.ucode_data = (uint64_t*)gspF3DEX2_xbusDataStart;
-		}
-
-		g_graphics_context.tlistp->t.data_ptr = (uint64_t*)g_graphics_context.view.dynamic.glist;
-		g_graphics_context.tlistp->t.data_size = (uint32_t)((g_graphics_context.glistp - g_graphics_context.view.dynamic.glist) * sizeof(Gfx));
-
+		graphics_context_setup_tlist(&g_graphics_context);
 
 		// perform tasks
 		osWritebackDCache(&g_graphics_context.view.dynamic, sizeof(dynamic_t));

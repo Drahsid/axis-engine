@@ -8,10 +8,8 @@
 #include "video.h"
 #include "stdint.h"
 
-// TODO: pretty sure modeling and viewing are conceptually the same and we only need one
 typedef struct {
 	Mtx	projection;
-	Mtx	modeling;
 	Mtx	viewing;
     Mtx identity;
 	Gfx	glist[GLIST_LEN];
@@ -183,6 +181,23 @@ void graphics_context_reset(graphics_context_t* context, char* static_segment) {
 void graphics_context_end(graphics_context_t* context) {
     gDPFullSync(context->glistp++);
     gSPEndDisplayList(context->glistp++);
+}
+
+void graphics_context_setup_tlist(graphics_context_t* context) {
+    context->tlistp->t.ucode_boot = (uint64_t*)rspbootTextStart;
+    context->tlistp->t.ucode_boot_size = (uint32_t)rspbootTextEnd - (uint32_t)rspbootTextStart;
+
+    if(context->ucode) {
+        context->tlistp->t.ucode = (uint64_t*)gspF3DEX2_fifoTextStart;
+        context->tlistp->t.ucode_data = (uint64_t*)gspF3DEX2_fifoDataStart;
+        context->tlistp->t.output_buff_size = (uint64_t*)((int)rdp_output + (int)(RDP_OUTPUT_LEN * sizeof(uint64_t)));
+    } else {
+        context->tlistp->t.ucode = (uint64_t*)gspF3DEX2_xbusTextStart;
+        context->tlistp->t.ucode_data = (uint64_t*)gspF3DEX2_xbusDataStart;
+    }
+
+    context->tlistp->t.data_ptr = (uint64_t*)context->view.dynamic.glist;
+    context->tlistp->t.data_size = (uint32_t)((context->glistp - context->view.dynamic.glist) * sizeof(Gfx));
 }
 
 void graphics_context_swapfb(graphics_context_t* context) {
