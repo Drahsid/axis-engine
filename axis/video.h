@@ -11,5 +11,5 @@
 #define	SCREEN_HT (480)
 #define RDP_OUTPUT_LEN (4096 * 16)
 
-#endif
+#endif /* VIDEO_H */
 

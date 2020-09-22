@@ -1,10 +1,9 @@
 #ifndef DMAOBJ_H
-#define DMAOBJ_J
+#define DMAOBJ_H
 
 #include <ultra64.h>
 #include "stdint.h"
 
-extern char _codeSegmentEnd[];
 extern char _staticSegmentRomStart[], _staticSegmentRomEnd[];
 
 typedef struct
@@ -12,9 +11,11 @@ typedef struct
     OSMesgQueue dma_message_queue;
     OSMesg dma_message_buffer;
     OSIoMesg dma_io_message_buffer;
+    OSPiHandle* handler;
 } dma_object_t;
 
 void dma_object_construct(dma_object_t* dma_obj, OSPiHandle* handler, char* segment) {
+    dma_obj->handler = handler;
     osCreateMesgQueue(&dma_obj->dma_message_queue, &dma_obj->dma_message_buffer, 1);
 
     dma_obj->dma_io_message_buffer.hdr.pri = OS_MESG_PRI_NORMAL;
@@ -37,5 +38,5 @@ void dma_object_read_rom_with_pri(dma_object_t* dma_obj, uint32_t src, void* des
     osRecvMesg(&dma_obj->dma_message_queue, NULL, OS_MESG_BLOCK);
 }
 
-#endif
+#endif /* DMAOBJ_H */
 

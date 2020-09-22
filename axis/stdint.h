@@ -35,6 +35,6 @@ typedef enum {
 #define true 1
 #define false 0
 
-#endif
+#endif /* _LANGUAGE_C */
 
 #endif /* __AXIS_STDINT_INCLUDED__ */

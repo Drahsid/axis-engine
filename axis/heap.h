@@ -294,5 +294,5 @@ heap_block_t* heap_get_largest_free(heap_t* heap) {
 #define free(address) heap_free(g_heap, address)
 #define realloc(address, size) heap_realloc(g_heap, address, size)
 
-#endif
+#endif /* HEAP_H */
 

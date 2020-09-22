@@ -8,6 +8,7 @@
 #include "video.h"
 #include "stdint.h"
 
+// TODO: pretty sure modeling and viewing are conceptually the same and we only need one
 typedef struct {
 	Mtx	projection;
 	Mtx	modeling;
@@ -28,15 +29,15 @@ typedef struct {
 } view_t;
 
 typedef struct {
-    OSMesgQueue rdp_message_queue, vsync_message_queue;
-    OSMesg rdp_message_buffer, vsync_message_buffer;
+    OSMesgQueue rdp_message_queue, vsync_message_queue, rsp_message_queue;
+    OSMesg rdp_message_buffer, vsync_message_buffer, rsp_message_buffer;
     OSTask tlist;
 
     COLOR_DEPTH_TYPE __attribute__((aligned(64))) framebuffer[2][SCREEN_WD * SCREEN_HT];
 
     view_t view;
 
-    // Todo Pointers and malloc
+    // TODO: Pointers and malloc
     Gfx rsp_init[5];
     Gfx rdp_init[16];
     Gfx clear_fb[8];
@@ -51,7 +52,7 @@ typedef struct {
 } __attribute__((aligned(16))) graphics_context_t;
 
 void view_construct(view_t* view) {
-    view->fov = 1.797689f;
+    view->fov = 103.0f;
     view->aspect = SCREEN_WD / SCREEN_HT;
     view->near = 0.01f;
     view->far = G_MAXZ;
@@ -69,11 +70,16 @@ void view_construct(view_t* view) {
 }
 
 void graphics_context_construct(graphics_context_t* context) {
-    volatile uint32_t i = 0;
+    volatile uint32_t pixel = 0; // volatile to prevent memset optimization
 
-    for (i; i < SCREEN_WD * SCREEN_HT; i++) {
-        context->framebuffer[0][i] = 0;
-        context->framebuffer[1][i] = 0;
+    osCreateViManager(OS_PRIORITY_VIMGR);
+    osViSetMode(&osViModeTable[OS_VI_NTSC_HPF1]);
+    osViSetSpecialFeatures(OS_VI_GAMMA_OFF | OS_VI_GAMMA_DITHER_OFF);
+    osViSetSpecialFeatures(OS_VI_DITHER_FILTER_ON);
+
+    for (pixel; pixel < SCREEN_WD * SCREEN_HT; pixel++) {
+        context->framebuffer[0][pixel] = 0;
+        context->framebuffer[1][pixel] = 0;
     }
 
     OSTask tlist = {
@@ -104,7 +110,7 @@ void graphics_context_construct(graphics_context_t* context) {
         gsSPClearGeometryMode(G_SHADE | G_SHADING_SMOOTH | G_CULL_BOTH | G_FOG | G_LIGHTING | G_TEXTURE_GEN |
                             G_TEXTURE_GEN_LINEAR | G_LOD ),
         gsSPTexture(0, 0, 0, 0, G_OFF),
-        gsSPSetGeometryMode(G_SHADE | G_SHADING_SMOOTH),
+        gsSPSetGeometryMode(G_SHADE | G_ZBUFFER | G_SHADING_SMOOTH),
         gsSPEndDisplayList()
     };
 
@@ -150,6 +156,15 @@ void graphics_context_construct(graphics_context_t* context) {
     context->ucode = 0;
     context->rsp_ticks = 0;
     context->rdp_ticks = 0;
+
+    osCreateMesgQueue(&context->rsp_message_queue, &context->rsp_message_buffer, 2);
+    osSetEventMesg(OS_EVENT_SP, &context->rsp_message_queue, NULL);
+
+    osCreateMesgQueue(&context->rdp_message_queue, &context->rdp_message_buffer, 2);
+    osSetEventMesg(OS_EVENT_DP, &context->rdp_message_queue, NULL);
+
+    osCreateMesgQueue(&context->vsync_message_queue, &context->vsync_message_buffer, 2);
+    osViSetEvent(&context->vsync_message_queue, NULL, 1);
 }
 
 void graphics_context_reset(graphics_context_t* context, char* static_segment) {
@@ -175,5 +190,5 @@ void graphics_context_swapfb(graphics_context_t* context) {
     context->current_fb = 1 - context->current_fb;
 }
 
-#endif
+#endif /* GRAPHICS_H */
 

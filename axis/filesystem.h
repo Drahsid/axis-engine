@@ -89,7 +89,7 @@ void filesystem_info_construct(filesystem_info_t* filesystem, OSPiHandle* handle
     filesystem->archive = (offset_addr + sizeof(uint64_t)); // the archive size is stored in 8 bytes
     dma_object_read_rom(&filesystem->dma_obj, offset_addr, &filesystem->archive_size, 8);
 
-    printf("Filesystem info\nheader: %s, num files: %llu, size: %llX, data address: %X\n", filesystem->header, filesystem->num_files, filesystem->archive_size, filesystem->archive);
+    printf("\nFilesystem info\nheader: %s, num files: %llu, size: %llX, data address: %X\n", filesystem->header, filesystem->num_files, filesystem->archive_size, filesystem->archive);
 }
 
 // index == num_files on fail
@@ -103,10 +103,12 @@ uint32_t filesystem_info_get_index_from_hash(filesystem_info_t* filesystem, uint
     return index;
 }
 
+// calling this wastes more horizontal space than simply filesystem->file_offsets[index]
 uint32_t filesystem_info_get_offset_from_index(filesystem_info_t* filesystem, uint32_t index) {
     return filesystem->file_offsets[index];
 }
 
+// TODO: might be able to clean repeated code up
 uint32_t filesystem_info_get_file_size(filesystem_info_t* filesystem, const char* file) {
     uint64_t hash = djb2_hash(file);
     uint32_t index = filesystem_info_get_index_from_hash(filesystem, hash);
@@ -115,12 +117,12 @@ uint32_t filesystem_info_get_file_size(filesystem_info_t* filesystem, const char
 
     if (index < filesystem->num_files) {
         if (index == (filesystem->num_files - 1)) {
-            offset = filesystem_info_get_offset_from_index(filesystem, index);
+            offset = filesystem->file_offsets[index];
             file_size = filesystem->archive_size - offset;
         }
         else {
-            offset = filesystem_info_get_offset_from_index(filesystem, index);
-            file_size = filesystem_info_get_offset_from_index(filesystem, index + 1) - offset;
+            offset = filesystem->file_offsets[index];
+            file_size = filesystem->file_offsets[index + 1]; - offset;
         }
     }
     else {
@@ -139,12 +141,12 @@ void filesystem_info_read_file(filesystem_info_t* filesystem, const char* file, 
 
     if (index < filesystem->num_files) {
         if (index == (filesystem->num_files - 1)) {
-            offset = filesystem_info_get_offset_from_index(filesystem, index);
+            offset = filesystem->file_offsets[index];
             file_size = filesystem->archive_size - offset;
         }
         else {
-            offset = filesystem_info_get_offset_from_index(filesystem, index);
-            file_size = filesystem_info_get_offset_from_index(filesystem, index + 1) - offset;
+            offset = filesystem->file_offsets[index];
+            file_size = filesystem->file_offsets[index + 1]; - offset;
         }
 
         osInvalDCache(dest, file_size);
@@ -164,12 +166,12 @@ void* filesystem_info_alloc_and_read_file(filesystem_info_t* filesystem, const c
 
     if (index < filesystem->num_files) {
         if (index == (filesystem->num_files - 1)) {
-            offset = filesystem_info_get_offset_from_index(filesystem, index);
+            offset = filesystem->file_offsets[index];
             file_size = filesystem->archive_size - offset;
         }
         else {
-            offset = filesystem_info_get_offset_from_index(filesystem, index);
-            file_size = filesystem_info_get_offset_from_index(filesystem, index + 1) - offset;
+            offset = filesystem->file_offsets[index];
+            file_size = filesystem->file_offsets[index + 1]; - offset;
         }
 
         dest = malloc(file_size);
@@ -184,4 +186,5 @@ void* filesystem_info_alloc_and_read_file(filesystem_info_t* filesystem, const c
     return dest;
 }
 
-#endif
+#endif /* FILESYSTEM_H */
+
