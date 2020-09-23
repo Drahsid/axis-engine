@@ -3,4 +3,4 @@
 
 #define printf osSyncPrintf
 
-#endif
+#endif /* PRINTF_H */
