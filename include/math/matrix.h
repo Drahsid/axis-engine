@@ -7,7 +7,7 @@ typedef union Matrix22 {
         float xx, xy;
         float yx, yy;
     } m;
-} MtxF2_t, mtxf2_t;
+} Mtx2F_t, mtx2f_t;
 
 typedef union Matrix33 {
     float mf[3][3];
@@ -16,7 +16,7 @@ typedef union Matrix33 {
         float yx, yy, yz;
         float zx, zy, zz;
     } m;
-} MtxF3_t, mtxf3_t;
+} Mtx3F_t, mtx3f_t;
 
 typedef union Matrix44 {
     float mf[4][4];
@@ -26,6 +26,43 @@ typedef union Matrix44 {
         float zx, zy, zz, zw;
         float wx, wy, wz, ww;
     } m;
-} MtxF4_t, mtxf4_t;
+} Mtx4F_t, mtx4f_t;
+
+static const mtx2f_t mtx2f_identity = (mtx2f_t){
+      1.0f, 0.0f
+    , 0.0f, 1.0f
+};
+
+static const mtx3f_t mtx3f_identity = (mtx3f_t){
+      1.0f, 0.0f, 0.0f
+    , 0.0f, 1.0f, 0.0f
+    , 0.0f, 0.0f, 1.0f
+};
+
+static const mtx4f_t mtx4f_identity = (mtx4f_t){
+      1.0f, 0.0f, 0.0f, 0.0f
+    , 0.0f, 1.0f, 0.0f, 0.0f
+    , 0.0f, 0.0f, 1.0f, 0.0f
+    , 0.0f, 0.0f, 0.0f, 1.0f
+};
+
+
+/* #include <string.h> // For memcpy
+static inline void* matrix_set_identity(void* out, int dim)
+{
+    if (dim < 2)
+        return out;
+
+    float mtx[dim][dim];
+    int i, j;
+    
+    for (i = 0; i < dim; i++)
+        for (j = 0; j < dim; j++)
+            mtx[i][j] = (i == j) ? 1.0f : 0.0f;
+    
+    memcpy(out, mtx, dim * dim * sizeof(float));
+
+    return out;
+} */
 
 #endif /* __AXIS_MATRIX_INCLUDED__ */ 

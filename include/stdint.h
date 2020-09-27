@@ -8,6 +8,7 @@ typedef short int               int16_t;
 typedef int                     int32_t;
 typedef long long int           int64_t;
 typedef unsigned char           uint8_t;
+typedef unsigned char           byte;
 typedef unsigned short int      uint16_t;
 typedef unsigned int            uint32_t;
 typedef unsigned long long int  uint64_t;
@@ -20,18 +21,19 @@ typedef enum {
 
 #else // for intellisense
 
-#define int8_t signed char
-#define int16_t short int
-#define int32_t int
-#define int64_t long long int
-#define uint8_t unsigned char
-#define uint16_t unsigned short int
-#define uint32_t unsigned int
-#define uint64_t unsigned long long
-#define BOOL int;
+#define int8_t                  signed char
+#define int16_t                 short int
+#define int32_t                 int
+#define int64_t                 long long int
+#define uint8_t                 unsigned char
+#define byte                    unsigned char
+#define uint16_t                unsigned short int
+#define uint32_t                unsigned int
+#define uint64_t                unsigned long long
+#define BOOL                    int;
 
-#define true 1
-#define false 0
+#define true                    1
+#define false                   0
 
 #endif
 
