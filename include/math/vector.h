@@ -43,61 +43,167 @@ typedef struct {
 #define VEC2_NEW(x, y) (vec2f_t){(x), (y)}
 #define VEC3_NEW(x, y, z) (vec3f_t){(x), (y), (z)}
 #define VEC4_NEW(x, y, z, w) (vec4f_t){(x), (y), (z), (w)}
-#define vec_new(...) VEC_OVERRIDE(__VA_ARGS__, VEC4_NEW, VEC3_NEW, VEC2_NEW)(__VA_ARGS__)
+#define vec_new(...) (VEC_OVERRIDE(__VA_ARGS__, VEC4_NEW, VEC3_NEW, VEC2_NEW)(__VA_ARGS__))
 
-/* Construct a Vector 3 Type from floating-point numbers. */
-/* static inline void vec3f_construct(vec3f_t* xyz, float x, float y, float z) {
-    xyz->x = x;
-    xyz->y = y;
-    xyz->z = z;
-} */
-
-/* Computer the length of a Vector 3 Type (floating-point) */
-static inline float vec3f_length(vec3f_t* a)
-{
-    float ls = (a->x * a->x) + (a->y * a->y) + (a->z * a->z);
-    return (float)sqrtf(ls);
+// add the vec3f rhs to the vec3f lhs, storing the result in lhs ((vec3f_t)lhs += (vec3f_t)rhs)
+static inline void vec3f_add_assignment(vec3f_t* lhs, vec3f_t* rhs) {
+    lhs->x += rhs->x;
+    lhs->y += rhs->y;
+    lhs->z += rhs->z;
 }
 
-/* Normalize a Vector 3 Type (floating-point) */
-static inline void vec3f_normalize(vec3f_t* a)
-{
-    float ls = (a->x * a->x) + (a->y * a->y) + (a->z * a->z);
-    float length = (float)sqrtf(ls);
-    a->x = (a->x / length);
-    a->y = (a->y / length);
-    a->z = (a->z / length);
+// subtract the vec3f rhs with the vec3f lhs, storing the result in lhs ((vec3f_t)lhs -= (vec3f_t)rhs)
+static inline void vec3f_sub_assignment(vec3f_t* lhs, vec3f_t* rhs) {
+    lhs->x -= rhs->x;
+    lhs->y -= rhs->y;
+    lhs->z -= rhs->z;
 }
 
-/* Compute the distance between two Vector 3 Types (floating-point) */
-static inline float vec3f_distance(vec3f_t* a, vec3f_t* b)
-{
-    float d[3] = {
-        (float)((a->x) - (b->x))
-        , (float)((a->y) - (b->y))
-        , (float)((a->z) - (b->z))
-    };
-
-    float ls = (d[0] * d[0]) + (d[1] * d[1]) + (d[2] * d[2]);
-    return (float)sqrtf(ls);
+// scale the vec3f lhs to the vec3f rhs, storing the result in lhs ((vec3f_t)lhs *= (vec3f_t)rhs)
+static inline void vec3f_multiply_assignment(vec3f_t* lhs, vec3f_t* rhs) {
+    lhs->x *= rhs->x;
+    lhs->y *= rhs->y;
+    lhs->z *= rhs->z;
 }
 
-// vec3f_construct();
-// vec3f_length();
-// vec3f_normalize();
-// vec3f_distance();
-// vec3f_dot();
-// vec3f_cross();
-// vec3f_reflect();
-// vec3f_dot();
-// vec3f_clamp();
-// vec3f_lerp();
-// vec3f_transform();
-// vec3f_add();
-// vec3f_subtract();
-// vec3f_multiply();
-// vec3f_divide();
-// vec3f_invert();
+// divide the vec3f lhs by the vec3f rhs, storing the result in lhs ((vec3f_t)lhs /= (vec3f_t)rhs)
+static inline void vec3f_divide_assignment(vec3f_t* lhs, vec3f_t* rhs) {
+    lhs->x /= rhs->x;
+    lhs->y /= rhs->y;
+    lhs->z /= rhs->z;
+}
+
+// scale the vec3f lhs to the float rhs, storing the result in lhs ((vec3f_t)lhs *= (float)rhs)
+static inline void vec3f_multiplyf_assignment(vec3f_t* lhs, float rhs) {
+    lhs->x *= rhs;
+    lhs->y *= rhs;
+    lhs->z *= rhs;
+}
+
+// divide the vec3f lhs by the float rhs, storing the result in lhs ((vec3f_t)lhs /= (float)rhs)
+static inline void vec3f_dividef_assignment(vec3f_t* lhs, float rhs) {
+    lhs->x /= rhs;
+    lhs->y /= rhs;
+    lhs->z /= rhs;
+}
+
+// returns the sum of the vec3f lhs and the vec3f rhs (v = (vec3f_t)lhs + (vec3f_t)rhs)
+static inline vec3f_t vec3f_add(vec3f_t lhs, vec3f_t rhs) {
+    vec3f_add_assignment(&lhs, &rhs);
+    return lhs;
+}
+
+// returns the vec3f lhs subtracted by the vec3f rhs (v = (vec3f_t)lhs - (vec3f_t)rhs)
+static inline vec3f_t vec3f_sub(vec3f_t lhs, vec3f_t rhs) {
+    vec3f_sub_assignment(&lhs, &rhs);
+    return lhs;
+}
+
+// returns the vec3f lhs scaled to the vec3f rhs (v = (vec3f_t)lhs * (vec3f_t)rhs)
+static inline vec3f_t vec3f_multiply(vec3f_t lhs, vec3f_t rhs) {
+    vec3f_multiply_assignment(&lhs, &rhs);
+    return lhs;
+}
+
+// returns the vec3f lhs divided by the vec3f rhs (v = (vec3f_t)lhs / (vec3f_t)rhs)
+static inline vec3f_t vec3f_divide(vec3f_t lhs, vec3f_t rhs) {
+    vec3f_divide_assignment(&lhs, &rhs);
+    return lhs;
+}
+
+// returns the vec3f lhs scaled to the float rhs (v = (vec3f_t)lhs * (float)rhs)
+static inline vec3f_t vec3f_multiplyf(vec3f_t lhs, float rhs) {
+    vec3f_multiplyf_assignment(&lhs, rhs);
+    return lhs;
+}
+
+// returns the vec3f lhs divided by the float rhs (v = (vec3f_t)lhs / (float)rhs)
+static inline vec3f_t vec3f_dividef(vec3f_t lhs, float rhs) {
+    vec3f_dividef_assignment(&lhs, rhs);
+    return lhs;
+}
+
+
+// returns a float using the calculation vec3f lhs dot vec3f rhs
+static inline float vec3f_dot(vec3f_t* lhs, vec3f_t* rhs) {
+    return (lhs->x * rhs->x) + (lhs->y * rhs->y) + (lhs->z * rhs->z);
+}
+
+// returns a vec3f using the calculation vec3f lhs cross vec3f rhs
+static inline vec3f_t vec3f_cross(vec3f_t* lhs, vec3f_t* rhs) {
+    return vec_new( lhs->y * rhs->z - rhs->y * lhs->z,
+                    lhs->z * rhs->x - rhs->z * lhs->x,
+                    lhs->x * rhs->y - rhs->x * lhs->y);
+}
+
+// returns the square magnitude of the vec3f lhs
+static inline float vec3f_square_magnitude(vec3f_t lhs) {
+    return  (lhs.x * lhs.x) +
+            (lhs.y * lhs.y) +
+            (lhs.z * lhs.z);
+}
+
+// returns the magnitude of the vec3f lhs
+static inline float vec3f_magnitude(vec3f_t lhs)
+{
+    return sqrtf(vec3f_square_magnitude(lhs));
+}
+
+// I needed these for optimization, _p isn't a very good way to name them. Open for suggestions
+// returns the square magnitude of the vec3f lhs
+static inline float vec3f_square_magnitude_p(vec3f_t* lhs) {
+    return  (lhs->x * lhs->x) +
+            (lhs->y * lhs->y) +
+            (lhs->z * lhs->z);
+}
+
+// returns the magnitude of the vec3f lhs
+static inline float vec3f_magnitude_p(vec3f_t* lhs)
+{
+    return sqrtf(vec3f_square_magnitude_p(lhs));
+}
+
+// normalizes the vec3f lhs into a unit vector
+static inline void vec3f_normalize_assignment(vec3f_t* lhs)
+{
+    float magnitude = vec3f_magnitude_p(lhs);
+    lhs->x = (lhs->x / magnitude);
+    lhs->y = (lhs->y / magnitude);
+    lhs->z = (lhs->z / magnitude);
+}
+
+// returns the unit vector of the vec3f lhs
+static inline vec3f_t vec3f_normalize(vec3f_t lhs)
+{
+    vec3f_normalize_assignment(&lhs);
+    return lhs;
+}
+
+// returns the magnitude of the vecf lhs subtracted by the vec3f rhs
+static inline float vec3f_distance(vec3f_t lhs, vec3f_t rhs)
+{
+    vec3f_sub_assignment(&lhs, &rhs);
+    return vec3f_magnitude_p(&lhs);
+}
+
+// iverses the vec3f lhs
+static inline void vec3f_inverse_assignment(vec3f_t* lhs) {
+    vec3f_multiplyf_assignment(lhs, -1.0f);
+}
+
+// returns the inverse vector of the vec3f lhs
+static inline vec3f_t vec3f_inverse(vec3f_t lhs) {
+    vec3f_multiplyf_assignment(&lhs, -1.0f);
+    return lhs;
+}
+
+static const vec3f_t vec3f_right    = vec_new(1.0f, 0.0f, 0.0f);
+static const vec3f_t vec3f_up       = vec_new(0.0f, 1.0f, 0.0f);
+static const vec3f_t vec3f_forward  = vec_new(0.0f, 0.0f, 1.0f);
+static const vec3f_t vec3f_left     = vec_new(-1.0f, 0.0f, 0.0f);
+static const vec3f_t vec3f_down     = vec_new(0.0f, -1.0f, 0.0f);
+static const vec3f_t vec3f_backward = vec_new(0.0f, 0.0f, -1.0f);
+static const vec3f_t vec3f_zero     = vec_new(0.0f, 0.0f, 0.0f);
 
 
 #endif /* __AXIS_VECTOR_INCLUDED__ */
