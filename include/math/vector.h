@@ -1,6 +1,8 @@
 #ifndef __AXIS_VECTOR_INCLUDED__
 #define __AXIS_VECTOR_INCLUDED__
 
+#include <math.h>
+
 typedef struct {
     float x, y;
 } vec2f_t;
@@ -37,49 +39,18 @@ typedef struct {
     short x, y, z, w;
 } vec4s_t;
 
+#define VEC_OVERRIDE(_1, _2, _3, _4, N, ...) N
+#define VEC2_NEW(x, y) (vec2f_t){(x), (y)}
+#define VEC3_NEW(x, y, z) (vec3f_t){(x), (y), (z)}
+#define VEC4_NEW(x, y, z, w) (vec4f_t){(x), (y), (z), (w)}
+#define vec_new(...) VEC_OVERRIDE(__VA_ARGS__, VEC4_NEW, VEC3_NEW, VEC2_NEW)(__VA_ARGS__)
+
 /* Construct a Vector 3 Type from floating-point numbers. */
-static inline void vec3f_construct(vec3f_t* xyz, float x, float y, float z) {
+/* static inline void vec3f_construct(vec3f_t* xyz, float x, float y, float z) {
     xyz->x = x;
     xyz->y = y;
     xyz->z = z;
-}
-
-static inline vec3f_t vec3f_new_float(float x, float y, float z)
-{
-    return (vec3f_t){x, y, z};
-}
-
-static inline vec3f_t vec3f_new_vector(const vec3f_t v)
-{
-    return v;
-}
-
-#define vec3f_new(_a0, ...)      \
-_Generic((_a0),                  \
-    int: vec3f_new_float,        \
-    uint32_t: vec3f_new_float,   \
-    float: vec3f_new_float,      \
-    double: vec3f_new_float,     \
-    vec3f_t: vec3f_new_vector    \
-)(_a0 __VA_OPT__(,) __VA_ARGS__)
-    
-
-
-static inline void vec3f_multiply_vector(void);
-static inline void vec3f_multiply_float(void);
-#define vec3f_multiply(VARG0, VARG1) \
-_Generic((VARG1)),                 \
-    vec3f_t: vec3f_multiply_vector,  \
-    default: vec3f_multiply_float    \
-)(VARG0, VARG1)
-
-static inline void vec3f_divide_vector(void);
-static inline void vec3f_divide_float(void);
-#define vec3f_divide(VARG0, VARG1) \
-_Generic((VARG1)),                 \
-    vec3f_t: vec3f_divide_vector,  \
-    default: vec3f_divide_float    \
-)(VARG0, VARG1)
+} */
 
 /* Computer the length of a Vector 3 Type (floating-point) */
 static inline float vec3f_length(vec3f_t* a)
@@ -124,7 +95,8 @@ static inline float vec3f_distance(vec3f_t* a, vec3f_t* b)
 // vec3f_transform();
 // vec3f_add();
 // vec3f_subtract();
-
+// vec3f_multiply();
+// vec3f_divide();
 // vec3f_invert();
 
 
