@@ -9,7 +9,7 @@ CC   = mips64-gcc
 LD   = mips64-ld
 
 CFLAGS = -G 0 -Os --std=gnu99 -mtune=vr4300 -mabi=32 -mips3 -mno-check-zero-division -mno-explicit-relocs -mno-memcpy
-LDFLAGS = -L$(Z64OVL_LD) -T z64ovl.ld --emit-relocs
+LDFLAGS = -T z64ovl.ld --emit-relocs
 
 # Default make
 default: clean entry $(PROGRAM).obj map

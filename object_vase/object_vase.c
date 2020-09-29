@@ -1,7 +1,8 @@
 #define _LANGUAGE_C_
 #define F3DEX_GBI_2 1
+#define VTX_SIZ(x) (x / 0x10)
 
-#include "/home/nick/Zelda/z64ovl/n64/gbi.h"
+#include "glank-gbi.h"
 #include "textures.h"
 #include "geometry.h"
 
@@ -21,7 +22,7 @@ Gfx dl_vase[] =
   gsSPVertex(&v_000550, 4, 0),
   gsSP2Triangles(0, 1, 2, 0, 0, 2, 3, 0),
   gsDPLoadTextureBlock(&timg_rgba16_0590, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0, G_TX_NOMIRROR | G_TX_WRAP, G_TX_MIRROR | G_TX_WRAP, 5, 5, G_TX_NOLOD, G_TX_NOLOD),
-  gsSPVertex(&v_0001A0, sizeof(v_0001A0), 0),
+  gsSPVertex(&v_0001A0, VTX_SIZ(sizeof(v_0001A0)), 0),
   gsSP2Triangles(0, 1, 2, 0, 0, 2, 3, 0),
   gsSP2Triangles(2, 1, 4, 0, 2, 4, 5, 0),
   gsSP2Triangles(3, 2, 6, 0, 3, 6, 7, 0),
@@ -36,7 +37,7 @@ Gfx dl_vase[] =
   gsSP2Triangles(19, 6, 8, 0, 19, 8, 22, 0),
   gsSP2Triangles(5, 24, 25, 0, 5, 25, 8, 0),
   gsSP2Triangles(26, 27, 28, 0, 29, 30, 31, 0),
-  gsSPVertex(&v_0003A0, sizeof(v_0003A0), 0),
+  gsSPVertex(&v_0003A0, VTX_SIZ(sizeof(v_0003A0)), 0),
   gsSP2Triangles(0, 1, 2, 0, 3, 2, 4, 0),
   gsSP2Triangles(2, 5, 0, 0, 5, 6, 0, 0),
   gsSP2Triangles(7, 6, 5, 0, 7, 5, 8, 0),
