@@ -66,7 +66,7 @@ void* heap_alloc(heap_t* heap, uint32_t size) {
     heap_block_t* block;
     heap_block_t* new_block;
 
-    size = HEAP_ALIGN(size);
+    size = HEAP_ALIGN(size) + HEAP_BLOCK_HEADER_SIZE;
     block = heap->free_head;
 
     while (block) {
@@ -124,7 +124,7 @@ void* heap_alloc_tail(heap_t* heap, uint32_t size) {
     heap_block_t* block;
     heap_block_t* new_block;
 
-    size = HEAP_ALIGN(size);
+    size = HEAP_ALIGN(size) + HEAP_BLOCK_HEADER_SIZE;
     block = heap->free_tail;
 
     while (block) {
