@@ -169,7 +169,8 @@ void drawproc(void* arg) {
 
 
 		// this stuff should really be in the main loop lol
-		{
+		// Removing the bracket that separates the float values from the drawproc function so you can use these values correctly.
+		
 			pitch += g_input.controller[0].stick_now.y * 0.0725f;
 			yaw += g_input.controller[0].stick_now.x * 0.0725f;
 
