@@ -2,7 +2,7 @@
 #define MAIN_H
 
 #include "video.h"
-#include "stdint.h"
+//#include "stdint.h" For some reason, _LANGUAGE_C is defined on the linking step now??
 
 #define	STATIC_SEGMENT 1
 #define	RSP_FB_SEGMENT 2
@@ -28,8 +28,8 @@ extern COLOR_DEPTH_TYPE g_rsp_framebuffer[];
 
 extern Vtx shade_vtx[];
 
-extern uint64_t dram_stack[];
-extern uint64_t rdp_output[];
+extern unsigned long long dram_stack[];
+extern unsigned long long rdp_output[];
 
 #endif	/* _LANGUAGE_C */
 

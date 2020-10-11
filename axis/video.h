@@ -1,9 +1,9 @@
 #ifndef VIDEO_H
 #define VIDEO_H
 
-#include "stdint.h"
+//#include "stdint.h"
 
-#define COLOR_DEPTH_TYPE uint16_t
+#define COLOR_DEPTH_TYPE unsigned short
 #define COLOR_DEPTH_SIZE (sizeof(COLOR_DEPTH_TYPE))
 #define COLOR_DEPTH_SIZE_BITS (COLOR_DEPTH_SIZE * 8)
 #define	GLIST_LEN (2048)

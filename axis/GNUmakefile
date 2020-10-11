@@ -7,12 +7,12 @@ ifeq ($(FINAL), YES)
 OPTIMIZE	=	-O1 -std=gnu11
 LCDEFS		=	-DNDEBUG -D_FINALROM -DF3DEX_GBI_2
 N64LIB		=	-lultra_rom
-ROMSIZE		=	33
+ROMSIZE		=	24
 else
 OPTIMIZER	=	-g -std=gnu11
 LCDEFS		=	-DDEBUG -DF3DEX_GBI_2
 N64LIB		=	-lultra_d
-ROMSIZE		=	33
+ROMSIZE		=	24
 endif
 
 APP			=	main.out
@@ -29,7 +29,7 @@ CODEOBJECTS =	$(CODEFILES:.c=.o)
 CODESEGMENT =	codesegment.o
 OBJECTS		=	$(CODESEGMENT) $(DATAOBJECTS)
 
-LCINCS		=	-I.
+LCINCS		=	-I. -I../include
 LCOPTS		=	-mno-shared -G 0
 LDFLAGS		=	$(MKDEPOPT)  -L$(ROOT)/usr/lib $(N64LIB) -L$(N64_LIBGCCDIR) -lgcc
 LDIRT 		=	$(APP) *.so

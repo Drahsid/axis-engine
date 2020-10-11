@@ -197,6 +197,13 @@ static inline vec3f_t vec3f_inverse(vec3f_t lhs) {
     return lhs;
 }
 
+
+static const vec2f_t vec2f_right    = vec_new(1.0f, 0.0f);
+static const vec2f_t vec2f_up       = vec_new(0.0f, 1.0f);
+static const vec2f_t vec2f_left     = vec_new(-1.0f, 0.0f);
+static const vec2f_t vec2f_down     = vec_new(0.0f, -1.0f);
+static const vec2f_t vec2f_zero     = vec_new(0.0f, 0.0f);
+
 static const vec3f_t vec3f_right    = vec_new(1.0f, 0.0f, 0.0f);
 static const vec3f_t vec3f_up       = vec_new(0.0f, 1.0f, 0.0f);
 static const vec3f_t vec3f_forward  = vec_new(0.0f, 0.0f, 1.0f);

@@ -5,8 +5,8 @@
 #include <string.h>
 #include "dma_object.h"
 #include "heap.h"
-#include "stdint.h"
 #include "printf.h"
+#include "stdint.h"
 
 // TODO: move these string funcs
 int strcmp(const char* p1, const char* p2)

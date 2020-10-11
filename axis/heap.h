@@ -9,8 +9,8 @@
 
 #include <ultra64.h>
 #include <string.h>
-#include "stdint.h"
 #include "printf.h"
+#include "stdint.h"
 
 typedef struct heap_block_s {
     struct heap_block_s* free_last;

@@ -3,13 +3,13 @@
 #include <assert.h>
 
 #include "main.h"
-#include "printf.h"
 #include "video.h"
-#include "stdint.h"
+#include "printf.h"
 #include "heap.h"
 #include "filesystem.h"
 #include "graphics.h"
 #include "input.h"
+#include "stdint.h"
 
 extern char _codeSegmentEnd[];
 extern char _staticSegmentRomStart[], _staticSegmentRomEnd[];
@@ -106,39 +106,14 @@ void drawproc(void* arg) {
 	OSTime last_time;
 	OSTime this_time;
 
-	float pitch = 0.0f;
-	float yaw = 1.5707f;
-	float theta = 0.0f;
-
-	// I wrote this like this to motivate poe to finish and upload his vector superior header
-	// Hope you wince while reading this
-	float px = 0.0f;
-	float py = 0.0f;
-	float pz = -100.0f;
-
-	float vx = 0.0f;
-	float vy = 0.0f;
-	float vz = 0.0f;
-
-	float fx = 0.0f;
-	float fy = 0.0f;
-	float fz = 0.0f;
-
-	float rx = 0.0f;
-	float ry = 0.0f;
-	float rz = 0.0f;
-
-	float ux = 0.0f;
-	float uy = 1.0f;
-	float uz = 0.0f;
-
-	float ex = 0.0f;
-	float ey = 0.0f;
-	float ez = 0.0f;
-
-	int v = 0;
-	int h = 0;
-	int j = 0;
+	vec3f_t euler = vec_new(0, 1.5707f, 0);
+	vec3f_t orbit = vec3f_zero;
+	vec3f_t position = vec_new(0, 0, -100.0f);
+	vec3f_t velocity = vec3f_zero;
+	vec3f_t forward = vec3f_forward;
+	vec3f_t right = vec3f_right;
+	vec3f_t up = vec3f_up;
+	vec3i_t vhj = {0, 0, 0};
 
 	printf("drawproc go vroom\n");
 
@@ -146,10 +121,9 @@ void drawproc(void* arg) {
 	last_time = osGetTime();
 
 	for (;;) {
-		v = 0;
-		h = 0;
-		j = 0;
-		theta += 0.01f;
+		vhj.x = 0;
+		vhj.y = 0;
+		vhj.z = 0;
 
 		this_time = osGetTime();
 		g_graphics_context.rdp_ticks = OS_CYCLES_TO_USEC(this_time - last_time);
@@ -170,101 +144,80 @@ void drawproc(void* arg) {
 
 		// this stuff should really be in the main loop lol
 		{
-			pitch += g_input.controller[0].stick_now.y * 0.0725f;
-			yaw += g_input.controller[0].stick_now.x * 0.0725f;
+			euler.x += g_input.controller[0].stick_now.y * 0.0725f;
+			euler.y += g_input.controller[0].stick_now.x * 0.0725f;
 
 			// constrain and preserve
-			if (pitch > 89.0f * (3.14169f / 180.0f)) pitch = 89.0f * (3.14169f / 180.0f);
-			if (pitch < -89.0f * (3.14169f / 180.0f)) pitch = -89.0f * (3.14169f / 180.0f);
-			if (yaw > (3.14159f * 2)) yaw -= (3.14159f * 2) * 2;
-			if (yaw < -(3.14159f * 2)) yaw += (3.14159f * 2) * 2;
+			if (euler.x > 89.0f * (3.14169f / 180.0f)) euler.x = 89.0f * (3.14169f / 180.0f);
+			if (euler.x < -89.0f * (3.14169f / 180.0f)) euler.x = -89.0f * (3.14169f / 180.0f);
+			if (euler.y > (3.14159f * 2)) euler.y -= (3.14159f * 2) * 2;
+			if (euler.y < -(3.14159f * 2)) euler.y += (3.14159f * 2) * 2;
 
-			if (g_input.controller[0].buttons[BUTTON_INDEX_CUP].state >= BUTTON_STATE_PRESSED) v += 1;
-			if (g_input.controller[0].buttons[BUTTON_INDEX_CDOWN].state >= BUTTON_STATE_PRESSED) v -= 1;
-			if (g_input.controller[0].buttons[BUTTON_INDEX_CRIGHT].state >= BUTTON_STATE_PRESSED) h -= 1;
-			if (g_input.controller[0].buttons[BUTTON_INDEX_CLEFT].state >= BUTTON_STATE_PRESSED) h += 1;
-			if (g_input.controller[0].buttons[BUTTON_INDEX_RT].state >= BUTTON_STATE_PRESSED) j += 1;
-			if (g_input.controller[0].buttons[BUTTON_INDEX_LT].state >= BUTTON_STATE_PRESSED) j -= 1;
+			if (g_input.controller[0].buttons[BUTTON_INDEX_CUP].state >= BUTTON_STATE_PRESSED) vhj.x += 1;
+			if (g_input.controller[0].buttons[BUTTON_INDEX_CDOWN].state >= BUTTON_STATE_PRESSED) vhj.x -= 1;
+			if (g_input.controller[0].buttons[BUTTON_INDEX_CRIGHT].state >= BUTTON_STATE_PRESSED) vhj.y -= 1;
+			if (g_input.controller[0].buttons[BUTTON_INDEX_CLEFT].state >= BUTTON_STATE_PRESSED) vhj.y += 1;
+			if (g_input.controller[0].buttons[BUTTON_INDEX_RT].state >= BUTTON_STATE_PRESSED) vhj.z += 1;
+			if (g_input.controller[0].buttons[BUTTON_INDEX_LT].state >= BUTTON_STATE_PRESSED) vhj.z -= 1;
 
 			// calculate the euler orbit position based on pitch & yaw
-			ex = cosf(pitch) * cosf(yaw);
-			ey = -sinf(pitch);
-			ez = cosf(pitch) * sinf(yaw);
+			orbit = vec_new(
+				cosf(euler.x) * cosf(euler.y),
+				-sinf(euler.x),
+				cosf(euler.x) * sinf(euler.y));
 
 			// which just so happens to also be our forward vector
-			fx = ex;
-			fy = ey;
-			fz = ez;
+			forward = orbit;
 
 			// cross it with whatever is the last up vector
-			rx = fy * uz - uy * fz;
-			ry = fz * ux - uz * fx;
-			rz = fx * uy - ux * fy;
+			right = vec3f_cross(&forward, &up);
 
 			// normalize
-			ux = sqrtf(fx * fx + fy * fy + fz * fz);
-			fx /= ux;
-			fy /= ux;
-			fz /= ux;
-
-			ux = sqrtf(rx * rx + ry * ry + rz * rz);
-			rx /= ux;
-			ry /= ux;
-			rz /= ux;
+			vec3f_normalize_assignment(&forward);
+			vec3f_normalize_assignment(&right);
 
 			// convert to desired dir and check magnitude then normalize
-			vx = (fx * v) + (rx * h);
-			vy = (fy * v) + (ry * h);
-			vz = (fz * v) + (rz * h);
+			velocity =	vec3f_add(
+						vec3f_multiplyf(forward, vhj.x), vec3f_multiplyf(right, vhj.y));
 
-			ux = sqrtf(vx * vx + vy * vy + vz * vz);
-			if (ux > 0) {
-				vx /= ux;
-				vy /= ux;
-				vz /= ux;
+			if ((up.x = vec3f_square_magnitude_p(&velocity)) > 0) {
+				vec3f_dividef_assignment(&velocity, sqrtf(up.x));
 			}
 
 			// same for up and down
-			if (j != 0) {
-				ux = ry * fz - fy * rz;
-				uy = rz * fx - fz * rx;
-				uz = rx * fy - fx * ry;
+			if (vhj.z != 0) {
+				up = vec3f_cross(&right, &forward);
 
-				rx = sqrtf(ux * ux + uy * uy + uz * uz);
-				if (rx != 0) {
-					ux /= rx;
-					uy /= rx;
-					uz /= rx;
-
-					px += ux * (j * 5.0f);
-					py += uy * (j * 5.0f);
-					pz += uz * (j * 5.0f);
+				if ((right.x = vec3f_square_magnitude_p(&up)) != 0) {
+					vec3f_dividef_assignment(&up, sqrtf(right.x));
+					right = vec3f_multiplyf(up, vhj.z * 5.0f);
+					vec3f_add_assignment(&position, &right);
 				}
 			}
 
 			// move
-			px += vx * 5.0f;
-			py += vy * 5.0f;
-			pz += vz * 5.0f;
+			right = vec3f_multiplyf(velocity, 5.0f);
+			vec3f_add_assignment(&position, &right);
 
-			// lmao, true to the concept, 'onetri-3d;' rotates the perspective just like onetri rotates the ortho
-			ux = cosf(theta);
-			uy = -sinf(theta);
-			uz = sinf(theta);
+			/* lmao, true to the concept, 'onetri-3d;' rotates the perspective just like onetri rotates the ortho
+			up.x = cosf(theta);
+			up.y = -sinf(theta);
+			up.z = sinf(theta);
 
-			rx = sqrtf(ux * ux + uy * uy + uz * uz);
-			ux /= rx;
-			uy /= rx;
-			uz /= rx;
+			right.x = sqrtf(up.x * up.x + up.y * up.y + up.z * up.z);
+			up.x /= right.x;
+			up.y /= right.x;
+			up.z /= right.x;*/
+			up = vec3f_up;
 		}
 
 		guPerspective(&g_graphics_context.view.dynamic.projection, &g_graphics_context.view.persp_norm, g_graphics_context.view.fov, g_graphics_context.view.aspect, g_graphics_context.view.near, g_graphics_context.view.far, g_graphics_context.view.scale);
 		gSPPerspNormalize(g_graphics_context.glistp++, g_graphics_context.view.persp_norm);
 		guLookAt(
 			&g_graphics_context.view.dynamic.viewing,
-			px, py, pz, // eye
-			px + ex, py + ey, pz + ez, // at / focus
-			ux, uy, uz // up
+			position.x, position.y, position.z, // eye
+			position.x + orbit.x, position.y + orbit.y, position.z + orbit.z, // at / focus
+			up.x, up.y, up.z // up
 			/*0, 1.0f, 0*/
 		);
 

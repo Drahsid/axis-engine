@@ -4,16 +4,12 @@
 #include <ultra64.h>
 #include <PR/sched.h>
 #include "printf.h"
+#include "math/vector.h"
 #include "stdint.h"
 
 /* TODO: I should write a macro to convert usec to floating point time, then change all of the time values in here to use floats
  * TODO: button_?_t might be a bad naming scheme for controller buttons. Might want to rename these and move into their own header
  */
-
-// TODO: use Poe's update (whenever he pushes it)
-typedef struct {
-    float x, y;
-} vec2f_t;
 
 // bit index for each button
 enum button_index {
@@ -74,10 +70,8 @@ void controller_construct(controller_t* cont) {
         cont->buttons[index].time = 0;
     }
 
-    cont->stick_now.x = 0.0f;
-    cont->stick_now.y = 0.0f;
-    cont->stick_before.x = 0.0f;
-    cont->stick_before.y = 0.0f;
+    cont->stick_now = vec2f_zero;
+    cont->stick_before = vec2f_zero;
 }
 
 void input_context_construct(input_context_t* input) {
@@ -139,8 +133,7 @@ void input_context_step(input_context_t* input) {
                 }
             }
 
-            input->controller[index].stick_before.x = input->controller[index].stick_now.x;
-            input->controller[index].stick_before.y = input->controller[index].stick_now.y;
+            input->controller[index].stick_before = input->controller[index].stick_now;
 
             // TODO: deadzone & peakzone
             input->controller[index].stick_now.x = (float)input->controller_now[index].stick_x * 0.0078125f;
