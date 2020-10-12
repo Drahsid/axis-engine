@@ -157,6 +157,7 @@ void filesystem_info_read_file(filesystem_info_t* filesystem, const char* file, 
     }
 }
 
+// do not forget to free the return address!
 void* filesystem_info_alloc_and_read_file(filesystem_info_t* filesystem, const char* file) {
     uint64_t hash = djb2_hash(file);
     uint32_t index = filesystem_info_get_index_from_hash(filesystem, hash);

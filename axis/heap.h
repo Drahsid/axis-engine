@@ -24,27 +24,26 @@ typedef struct {
     heap_block_t* free_head;
     heap_block_t* free_tail;
     heap_block_t* used_head;
+    uint32_t start;
+    uint32_t size;
 } heap_t;
+
+heap_t* g_heap;
 
 #define HEAP_BLOCK_ALIGNMENT (16)
 #define HEAP_ALIGN(lhs) ((((uint32_t)lhs) + HEAP_BLOCK_ALIGNMENT - 1) & ~(HEAP_BLOCK_ALIGNMENT - 1))
 #define HEAP_BLOCK_HEADER_SIZE (HEAP_ALIGN(sizeof(heap_block_t)))
+#define HEAP_END(lhs) (((heap_t*)lhs)->start + lhs->size)
 
-heap_t* g_heap;
-void* g_heap_start;
-uint32_t g_heap_size;
-#define g_heap_end ((void*)(g_heap_start + g_heap_size))
-
-void heap_construct(void* start, uint32_t size) {
+void heap_construct(heap_t* heap, void* start, uint32_t size) {
     heap_block_t* block;
 
-    // set up the globals
-    g_heap_start = ((uint32_t)start) + sizeof(heap_t);
-    g_heap_size = size - sizeof(heap_t);
-    g_heap = start;
+    // set up basic info
+    heap->start = start + sizeof(heap_t);
+    heap->size = size - sizeof(heap_t);
 
     // set up for first block
-    block = (heap_block_t*)HEAP_ALIGN(g_heap_start);
+    block = (heap_block_t*)HEAP_ALIGN(heap->start);
     size -= ((uint32_t)block) - ((uint32_t)start);
     size = HEAP_ALIGN(size);
 
@@ -56,10 +55,10 @@ void heap_construct(void* start, uint32_t size) {
     block->used = HEAP_BLOCK_HEADER_SIZE;
     block->free = size - HEAP_BLOCK_HEADER_SIZE;
 
-    g_heap->used_head = block;
+    heap->used_head = block;
 
-    if (block->free) g_heap->free_head = block;
-    else g_heap->free_head = NULL;
+    if (block->free) heap->free_head = block;
+    else heap->free_head = NULL;
 }
 
 void* heap_alloc(heap_t* heap, uint32_t size) {
@@ -236,13 +235,13 @@ void* heap_realloc(heap_t* heap, void* address, uint32_t size) {
     heap_block_t* new_block;
 
     size = HEAP_ALIGN(size);
-    block = ((uint32_t)address) - HEAP_BLOCK_HEADER_SIZE;
+    block = (heap_block_t*)(((uint32_t)address) - HEAP_BLOCK_HEADER_SIZE);
 
     if (size <= block->used || block->free >= size - block->used) {
         return (void*)(((uint32_t)block) + HEAP_BLOCK_HEADER_SIZE);
     }
     else {
-        new_block = heap_alloc(heap, size);
+        new_block = (heap_block_t*)heap_alloc(heap, size);
         memcpy(new_block, address, block->used);
         heap_free(heap, address);
         return new_block;

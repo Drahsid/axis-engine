@@ -45,8 +45,7 @@ typedef struct {
 
     uint8_t current_fb;
     uint8_t ucode;
-    int rsp_ticks;
-    int rdp_ticks;
+    uint64_t frame_count;
 } __attribute__((aligned(16))) graphics_context_t;
 
 void view_construct(view_t* view) {
@@ -69,6 +68,8 @@ void view_construct(view_t* view) {
 
 void graphics_context_construct(graphics_context_t* context) {
     volatile uint32_t pixel = 0; // volatile to prevent memset optimization
+
+    context->frame_count = 0;
 
     osCreateViManager(OS_PRIORITY_VIMGR);
     osViSetMode(&osViModeTable[OS_VI_NTSC_HPF1]);
@@ -152,8 +153,6 @@ void graphics_context_construct(graphics_context_t* context) {
 
     context->current_fb = 0;
     context->ucode = 0;
-    context->rsp_ticks = 0;
-    context->rdp_ticks = 0;
 
     osCreateMesgQueue(&context->rsp_message_queue, &context->rsp_message_buffer, 2);
     osSetEventMesg(OS_EVENT_SP, &context->rsp_message_queue, NULL);

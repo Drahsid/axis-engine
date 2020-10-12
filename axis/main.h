@@ -11,18 +11,7 @@
 #define BOOTSTACKSIZE 0x800
 #define BOOTSTACKSIZE_NUM (BOOTSTACKSIZE / sizeof(uint64_t))
 
-#define	STACKSIZE 0x2000
-#define STACKSIZE_NUM (STACKSIZE / sizeof(uint64_t))
-
 #ifdef _LANGUAGE_C
-
-enum thread_id {
-	THREAD_IDLE,
-	THREAD_MAIN,
-	THREAD_DRAW,
-	THREAD_CONT,
-	THREAD_COUNT
-};
 
 extern COLOR_DEPTH_TYPE g_rsp_framebuffer[];
 
