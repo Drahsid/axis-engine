@@ -12,6 +12,10 @@
 #define RAD2S (10430.37835047045)
 #define DEG2S (182.0444444444444)
 
+// My math could be wrong here
+#define C2SEC (1.06666666e-8)
+#define C2MSEC (0.00001066666)
+
 #define STOR(RHS) (S2RAD * RHS)
 #define STOD(RHS) (S2DEG * RHS)
 #define RTOS(RHS) (RAD2S * RHS)
@@ -26,6 +30,10 @@
 #define DTOSF(RHS) ((float)DEG2S * RHS)
 #define DTORF(RHS) ((float)DEG2RAD * RHS)
 #define RTODF(RHS) ((float)RAD2DEG * RHS)
+
+#define OS_CYCLES_TO_SEC(LHS) (((double)(LHS)) * C2SEC)
+#define OS_CYCLES_TO_MSEC(LHS) (((double)(LHS)) * C2MSEC)
+
 
 static const double MATH_PI = PI;
 static const double MATH_TAU = TAU;
@@ -46,6 +54,11 @@ static const float MATHF_STOR = (float)S2RAD;
 static const float MATHF_STOD = (float)S2DEG;
 static const float MATHF_RTOS = (float)RAD2S;
 static const float MATHF_DTOS = (float)DEG2S;
+
+static const double MATH_C2SEC = C2SEC;
+static const double MATH_C2MSEC = C2MSEC;
+static const float MATHF_C2SEC = (float)C2SEC;
+static const float MATHF_C2MSEC = (float)C2MSEC;
 
 #endif /* __AXIS_MATH_COMMON__ */
 

@@ -7,6 +7,10 @@
 #include "printf.h"
 
 void contstep_default(app_context_t* app) {
+    if (app->graphics_context.frame_count % 60 == 0) {
+        printf("dt contstep %f\ndt contproc %f\n", app->cont_time, app->contproc_time);
+    }
+
     input_context_step(&app->input_context);
 
     if (app->input_context.controller[0].buttons[BUTTON_INDEX_A].state == BUTTON_STATE_PRESSED) {

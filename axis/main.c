@@ -7,6 +7,7 @@
 #include "app_main.h"
 #include "app_draw.h"
 #include "app_cont.h"
+#include "math/math_common.h"
 #include "printf.h"
 #include "stdint.h"
 
@@ -60,6 +61,8 @@ void mainproc(void* arg)
 {
 	OSTime last_time;
 	OSTime this_time;
+	OSTime start_time;
+	OSTime end_time;
 
 	printf("mainproc go vroom\n");
 
@@ -72,30 +75,39 @@ void mainproc(void* arg)
 
 	this_time = osGetTime();
 	last_time = osGetTime();
+	start_time = osGetTime();
+	end_time = osGetTime();
 
 	for(;;) {
 		this_time = osGetTime();
 		if (g_context.main_step) g_context.main_step(&g_context);
-		g_context.main_ticks = OS_CYCLES_TO_USEC(this_time - last_time);
+		g_context.main_time = OS_CYCLES_TO_SEC(this_time - last_time);
 		last_time = this_time;
 
+		start_time = osGetTime();
 		osRecvMesg(&g_context.graphics_context.rsp_message_queue, NULL, OS_MESG_BLOCK);
+		end_time = osGetTime();
+		g_context.mainproc_time = OS_CYCLES_TO_SEC(end_time - start_time);
 	}
 }
 
 void drawproc(void* arg) {
 	OSTime last_time;
 	OSTime this_time;
+	OSTime start_time;
+	OSTime end_time;
 
 	printf("drawproc go vroom\n");
 
 	this_time = osGetTime();
 	last_time = osGetTime();
+	start_time = osGetTime();
+	end_time = osGetTime();
 
 	for (;;) {
 		this_time = osGetTime();
 		if (g_context.draw_step) g_context.draw_step(&g_context);
-		g_context.draw_ticks = OS_CYCLES_TO_USEC(this_time - last_time);
+		g_context.draw_time = OS_CYCLES_TO_SEC((double)(this_time - last_time));
 		last_time = this_time;
 
 		// wait for rdp to finish
@@ -104,27 +116,37 @@ void drawproc(void* arg) {
 		graphics_context_swapfb(&g_context.graphics_context);
 
 		// wait for vi to finish
+		start_time = osGetTime();
 		osRecvMesg(&g_context.graphics_context.vsync_message_queue, NULL, OS_MESG_BLOCK);
+		end_time = osGetTime();
+		g_context.drawproc_time = OS_CYCLES_TO_SEC(end_time - start_time);
 	}
 }
 
 void contproc(void* arg) {
 	OSTime last_time;
 	OSTime this_time;
+	OSTime start_time;
+	OSTime end_time;
 
 	printf("contproc go vroom\n");
 
 	this_time = osGetTime();
 	last_time = osGetTime();
+	start_time = osGetTime();
+	end_time = osGetTime();
 
 	for(;;) {
 		this_time = osGetTime();
 		if (g_context.cont_step) g_context.cont_step(&g_context);
-		g_context.cont_ticks = OS_CYCLES_TO_USEC(this_time - last_time);
+		g_context.cont_time = OS_CYCLES_TO_SEC(this_time - last_time);
 		last_time = this_time;
 
 		// wait for update
+		start_time = osGetTime();
 		osRecvMesg(&g_context.input_context.controller_message_queue, NULL, OS_MESG_BLOCK);
+		end_time = osGetTime();
+		g_context.contproc_time = OS_CYCLES_TO_SEC(end_time - start_time);
 	}
 }
 

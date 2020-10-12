@@ -8,6 +8,10 @@
 extern Vtx shade_vtx[];
 
 void drawstep_default(app_context_t* app) {
+    if (app->graphics_context.frame_count % 60 == 0) {
+        printf("dt drawstep %f\ndt drawproc %f\n", app->draw_time, app->drawproc_time);
+    }
+
     Gfx shadetri_dl[] = {
         gsSPMatrix(osVirtualToPhysical(&(app->graphics_context.view.dynamic.projection)), G_MTX_PROJECTION|G_MTX_LOAD|G_MTX_NOPUSH),
         gsSPMatrix(osVirtualToPhysical(&(app->graphics_context.view.dynamic.viewing)), G_MTX_MODELVIEW|G_MTX_LOAD|G_MTX_NOPUSH),

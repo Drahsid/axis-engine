@@ -8,10 +8,14 @@
 #include "graphics.h"
 
 void mainstep_default(app_context_t* app) {
-    if (app->main_ticks == 0) {
+    if (app->main_time == 0) {
         char* sample_text = (char*)filesystem_info_alloc_and_read_file(&app->filesystem, "/data/storytime/story.txt");
         printf("%s\n\n", sample_text);
         free(sample_text);
+    }
+
+    if (app->graphics_context.frame_count % 60 == 0) {
+        printf("dt mainstep %f\ndt mainproc %f\n", app->main_time, app->mainproc_time);
     }
 
     // TODO: if there is a way to do this on demand instead if in a separate thread, I want to find it
@@ -37,8 +41,8 @@ void mainstep_default(app_context_t* app) {
     euler->y += app->input_context.controller[0].stick_now.x * 0.0725f;
 
     // constrain and preserve
-    if (euler->x > DTORF(89.0f)) euler->x = DTORF(89.0f);
-    if (euler->x < DTORF(-89.0f)) euler->x = DTORF(-89.0f);
+    if (euler->x > DTORF(89.98f)) euler->x = DTORF(89.98f);
+    if (euler->x < DTORF(-89.98f)) euler->x = DTORF(-89.98f);
     if (euler->y > MATHF_TAU) euler->y -= MATHF_TAU;
     if (euler->y < MATHF_TAU) euler->y += MATHF_TAU;
 

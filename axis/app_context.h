@@ -50,9 +50,13 @@ typedef struct
     OSMesgQueue pi_message_queue;
     OSMesg pi_messages[NUM_PI_MSGS];
 
-    uint64_t main_ticks;
-    uint64_t draw_ticks;
-    uint64_t cont_ticks;
+    double main_time;
+    double draw_time;
+    double cont_time;
+
+    double mainproc_time;
+    double drawproc_time;
+    double contproc_time;
 
     // TODO: Create camera context v
     vec3f_t euler;
@@ -90,9 +94,9 @@ void app_context_construct(app_context_t* app, uint64_t* boot_stack, game_proc_t
     app->up = vec3f_up;
     app->vhj = vec3i_zero;
 
-    app->main_ticks = 0;
-    app->draw_ticks = 0;
-    app->cont_ticks = 0;
+    app->main_time = 0;
+    app->draw_time = 0;
+    app->cont_time = 0;
 }
 
 // Initialize/construct members
