@@ -14,8 +14,7 @@
 #ifdef _LANGUAGE_C
 
 extern COLOR_DEPTH_TYPE g_rsp_framebuffer[];
-
-extern Vtx shade_vtx[];
+extern COLOR_DEPTH_TYPE g_zbuffer[];
 
 extern unsigned long long dram_stack[];
 extern unsigned long long rdp_output[];

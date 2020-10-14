@@ -512,6 +512,29 @@ static inline vec4f_t vec4f_inverse(vec4f_t lhs) {
     return lhs;
 }
 
+
+#define quatf_add_assignment            vec4f_add_assignment
+#define quatf_sub_assignment            vec4f_sub_assignment
+#define quatf_multiplyf_assignment      vec4f_multiplyf_assignment
+#define quatf_dividef_assignment        vec4f_dividef_assignment
+#define quatf_add                       vec4f_add
+#define quatf_sub                       vec4f_sub
+#define quatf_multiply                  vec4f_multiply
+#define quatf_divide                    vec4f_divide
+#define quatf_multiplyf                 vec4f_multiplyf
+#define quatf_dividef                   vec4f_dividef
+#define quatf_dot                       vec4f_dot
+#define quatf_cross                     vec4f_cross
+#define quatf_square_magnitude          vec4f_square_magnitude
+#define quatf_magnitude                 vec4f_square_magnitude
+#define quatf_square_magnitude_p        vec4f_square_magnitude_p
+#define quatf_magnitude_p               vec4f_magnitude_p
+#define quatf_normalize_assignment      vec4f_normalize_assignment
+#define quatf_normalize                 vec4f_normalize
+#define quatf_distance                  vec4f_distance
+#define quatf_inverse_assignment        vec4f_inverse_assignment
+#define quatf_inverse                   vec4f_inverse
+
 // add the float rhs to the float w of quatf lhs, storing the result in lhs (lhs.w += rhs)
 static inline void quatf_addw_assignment(quatf_t* lhs, float rhs) {
     lhs->w += rhs;
@@ -621,18 +644,6 @@ static inline vec3f_t quatf_to_angle_axis(quatf_t* lhs, vec3f_t axis, float* ang
     return axis;
 }
 
-// sets the float angle to the angle between quaft lhs and quatf rhs
-static inline void quatf_angle_assignment(quatf_t* lhs, quatf_t* rhs, float* angle) {
-    *angle = acosf(quatf_multiplyf(*rhs, -rhs->w)) * 2.0f;
-    if (*angle > DTORF(180.0f)) *angle = DTORF(360.0f) - *angle;
-}
-
-// returns the float angle from the angle between quatf lhs and quatf rhs
-static inline float quatf_angle(quatf_t* lhs, quatf_t* rhs, float angle) {
-    quatf_angle_assignment(lhs, rhs, &angle);
-    return angle;
-}
-
 // sets the quatf lhs to the look rotation from vec3f look_at and vec3f up
 static inline void quatf_from_look_rotation_assignment(quatf_t* lhs, vec3f_t* look_at, vec3f_t* up) {
     vec3f_t forward, right;
@@ -655,27 +666,24 @@ static inline quatf_t quatf_from_look_rotation(vec3f_t* look_at, vec3f_t* up) {
     quatf_from_look_rotation_assignment(&return_value, look_at, up);
 }
 
-#define quatf_add_assignment            vec4f_add_assignment
-#define quatf_sub_assignment            vec4f_sub_assignment
-#define quatf_multiply_assignment       vec4f_multiplyf_assignment
-#define quatf_divide_assignment         vec4f_dividef_assignment
-#define quatf_add                       vec4f_add
-#define quatf_sub                       vec4f_sub
-#define quatf_multiply                  vec4f_multiply
-#define quatf_divide                    vec4f_divide
-#define quatf_multiplyf                 vec4f_multiplyf
-#define quatf_dividef                   vec4f_dividef
-#define quatf_dot                       vec4f_dot
-#define quatf_cross                     vec4f_cross
-#define quatf_square_magnitude          vec4f_square_magnitude
-#define quatf_magnitude                 vec4f_square_magnitude
-#define quatf_square_magnitude_p        vec4f_square_magnitude_p
-#define quatf_magnitude_p               vec4f_magnitude_p
-#define quatf_normalize_assignment      vec4f_normalize_assignment
-#define quatf_normalize                 vec4f_normalize
-#define quatf_distance                  vec4f_distance
-#define quatf_inverse_assignment        vec4f_inverse_assignment
-#define quatf_inverse                   vec4f_inverse
+static inline void quatf_to_matrix_assignment(float matrix[4][4], quatf_t lhs) {
+    float norm = 1.0f / quatf_magnitude_p(&lhs);
+    quatf_multiplyf_assignment(&lhs, norm);
+
+    matrix[0][0] = 1.0f - 2.0f * lhs.y * lhs.y - 2.0f * lhs.z * lhs.z;
+    matrix[0][1] = 2.0f * lhs.x * lhs.y - 2.0f * lhs.z * lhs.w;
+    matrix[0][2] = 2.0f * lhs.x * lhs.z + 2.0f * lhs.y * lhs.w;
+    matrix[0][3] = 0.0f;
+    matrix[1][0] = 2.0f * lhs.x * lhs.y + 2.0f * lhs.z * lhs.w;
+    matrix[1][1] = 1.0f - 2.0f * lhs.x * lhs.x - 2.0f * lhs.z * lhs.z;
+    matrix[1][2] = 2.0f * lhs.y * lhs.z - 2.0f * lhs.x * lhs.w;
+    matrix[1][3] = 0.0f;
+    matrix[2][0] = 2.0f * lhs.x * lhs.z - 2.0f * lhs.y * lhs.w;
+    matrix[2][1] = 2.0f * lhs.y * lhs.z + 2.0f * lhs.x * lhs.w;
+    matrix[2][2] = 1.0f - 2.0f * lhs.x * lhs.x - 2.0f * lhs.y * lhs.y;
+    matrix[2][3] = 0.0f;
+    matrix[3][3] = 1.0f;
+}
 
 
 // add the vec2i rhs to the vec2i lhs, storing the result in lhs ((vec2i_t)lhs += (vec2i_t)rhs)
@@ -1650,5 +1658,9 @@ static const vec4s_t vec4s_zero     = vecs_new(0, 0, 0, 0);
 #define quatf_ynhat     vec4f_down
 #define quatf_znhat     vec4f_backward
 #define quatf_ndentity  vec4f_ndentity
+
+#define  vec2_equals(lhs, rhs) (lhs.x == rhs.x && lhs.y == rhs.y)
+#define  vec3_equals(lhs, rhs) (lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z)
+#define  vec4_equals(lhs, rhs) (lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z && lhs.w == rhs.w)
 
 #endif /* __AXIS_VECTOR_INCLUDED__ */

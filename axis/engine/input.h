@@ -7,12 +7,11 @@
 #include "math/vector.h"
 #include "stdint.h"
 
-/* TODO: I should write a macro to convert usec to floating point time, then change all of the time values in here to use floats
- * TODO: button_?_t might be a bad naming scheme for controller buttons. Might want to rename these and move into their own header
+/* TODO: button_?_t might be a bad naming scheme for controller buttons. Might want to rename these and move into their own header
  */
 
 // bit index for each button
-enum button_index {
+enum button_index_e {
     BUTTON_INDEX_CRIGHT,
     BUTTON_INDEX_CLEFT,
     BUTTON_INDEX_CUP,

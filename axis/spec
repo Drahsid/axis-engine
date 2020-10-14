@@ -1,4 +1,4 @@
-#include "main.h"
+#include "engine/main.h"
 
 
 beginseg
@@ -16,14 +16,14 @@ beginseg
 	name "static"
 	flags OBJECT
 	number STATIC_SEGMENT
-	include "static.o"
+	include "engine/segment/static.o"
 endseg
 
 beginseg
 	name "rsp_framebuffer"
 	flags OBJECT
 	number RSP_FB_SEGMENT
-	include "rsp_framebuffer.o"
+	include "engine/segment/rsp_framebuffer.o"
 endseg
 
 beginseg

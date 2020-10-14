@@ -13,6 +13,13 @@ typedef unsigned int            uint32_t;
 typedef unsigned long long int  uint64_t;
 typedef int                     BOOL;
 
+#if __WORDSIZE == 64
+typedef long int                intmax_t;
+typedef unsigned long int       uintmax_t;
+#else
+typedef long long int           intmax_t;
+typedef unsigned long long int  uintmax_t;
+#endif
 
 typedef enum {
     false,

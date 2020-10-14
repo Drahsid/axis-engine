@@ -3,14 +3,25 @@
 
 #include <ultra64.h>
 #include "app_context.h"
-#include "graphics.h"
-
-extern Vtx shade_vtx[];
+#include "math/math_common.h"
+#include "engine/graphics.h"
+#include "engine/printf.h"
 
 void drawstep_default(app_context_t* app) {
-    if (app->graphics_context.frame_count % 60 == 0) {
+    if (app->graphics_context.frame_count % 600 == 0) {
         printf("dt drawstep %f\ndt drawproc %f\n", app->draw_time, app->drawproc_time);
     }
+
+    guPerspective(&app->graphics_context.view.dynamic.projection, &app->camera.persp_norm, app->camera.fovy, app->camera.aspect, app->camera.near, app->camera.far, app->camera.scale);
+    gSPPerspNormalize(app->graphics_context.glistp++, app->camera.persp_norm);
+
+    guPositionLook(app->graphics_context.view.dynamic.viewing.m, &app->camera);
+
+    Vtx* tri_vtx = malloc(sizeof(Vtx) * 4);
+    tri_vtx[0] = (Vtx){ -64,  64, 0, 0, 0, 0, 0x40, 0x10, 0x40, 0xFF };
+    tri_vtx[1] = (Vtx){  64,  64, 0, 0, 0, 0, 0x40, 0x40, 0x40, 0xFF };
+    tri_vtx[2] = (Vtx){  64, -64, 0, 0, 0, 0, 0x40, 0x40, 0x10, 0xFF };
+    tri_vtx[3] = (Vtx){ -64, -64, 0, 0, 0, 0, 0x10, 0x40, 0x40, 0xFF };
 
     Gfx shadetri_dl[] = {
         gsSPMatrix(osVirtualToPhysical(&(app->graphics_context.view.dynamic.projection)), G_MTX_PROJECTION|G_MTX_LOAD|G_MTX_NOPUSH),
@@ -19,20 +30,11 @@ void drawstep_default(app_context_t* app) {
         gsDPSetCycleType(G_CYC_1CYCLE),
         gsDPSetRenderMode(G_RM_AA_OPA_SURF, G_RM_AA_OPA_SURF2),
         gsSPSetGeometryMode(G_SHADE | G_SHADING_SMOOTH),
-        gsSPVertex(&(shade_vtx[0]), 4, 0),
+        gsSPVertex(&(tri_vtx[0]), 4, 0),
         gsSP1Triangle(0, 1, 2, 0),
         gsSP1Triangle(0, 2, 3, 0),
         gsSPEndDisplayList()
     };
-
-    guPerspective(&app->graphics_context.view.dynamic.projection, &app->graphics_context.view.persp_norm, app->graphics_context.view.fov, app->graphics_context.view.aspect, app->graphics_context.view.near, app->graphics_context.view.far, app->graphics_context.view.scale);
-    gSPPerspNormalize(app->graphics_context.glistp++, app->graphics_context.view.persp_norm);
-    guLookAt(
-        &app->graphics_context.view.dynamic.viewing,
-        app->position.x, app->position.y, app->position.z, // eye
-        app->position.x + app->orbit.x, app->position.y + app->orbit.y, app->position.z + app->orbit.z, // at / focus
-        app->up.x, app->up.y, app->up.z // up
-    );
 
     graphics_context_reset(&app->graphics_context, _codeSegmentEnd);
 
@@ -46,7 +48,9 @@ void drawstep_default(app_context_t* app) {
     osWritebackDCache(&app->graphics_context.view.dynamic, sizeof(dynamic_t));
     osSpTaskStart(app->graphics_context.tlistp);
 
-    app->graphics_context.frame_count++;;
+    free(tri_vtx);
+
+    app->graphics_context.frame_count++;
 }
 
 #endif

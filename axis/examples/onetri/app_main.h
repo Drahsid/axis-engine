@@ -2,10 +2,10 @@
 #define APP_MAIN_H
 
 #include "app_context.h"
-#include "heap.h"
-#include "filesystem.h"
+#include "engine/heap.h"
+#include "engine/filesystem.h"
 #include "math/vector.h"
-#include "graphics.h"
+#include "engine/graphics.h"
 
 void mainstep_default(app_context_t* app) {
     if (app->main_time == 0) {
@@ -14,7 +14,7 @@ void mainstep_default(app_context_t* app) {
         free(sample_text);
     }
 
-    if (app->graphics_context.frame_count % 60 == 0) {
+    if (app->graphics_context.frame_count % 600 == 0) {
         printf("dt mainstep %f\ndt mainproc %f\n", app->main_time, app->mainproc_time);
     }
 
@@ -27,13 +27,13 @@ void mainstep_default(app_context_t* app) {
 
     // Process camera
     vec3f_t* euler =  &app->euler;
-    vec3f_t* orbit = &app->orbit;
-    vec3f_t* position = &app->position;
     vec3f_t* velocity = &app->velocity;
-    vec3f_t* forward = &app->forward;
-    vec3f_t* right = &app->right;
-    vec3f_t* up = &app->up;
     vec3i_t* vhj = &app->vhj;
+    vec3f_t* position = &app->camera.actor.position;
+    vec3f_t* forward = &app->camera.forward;
+    vec3f_t* right = &app->camera.right;
+    vec3f_t* up = &app->camera.up;
+    vec3f_t temp = vec3f_zero;
 
     *vhj = vec3i_zero;
 
@@ -53,47 +53,49 @@ void mainstep_default(app_context_t* app) {
     if (app->input_context.controller[0].buttons[BUTTON_INDEX_RT].state >= BUTTON_STATE_PRESSED) vhj->z += 1;
     if (app->input_context.controller[0].buttons[BUTTON_INDEX_LT].state >= BUTTON_STATE_PRESSED) vhj->z -= 1;
 
-    // calculate the euler orbit position based on pitch & yaw
-    *orbit = vec_new(
+    // calculate forward vector
+    *forward = vec_new(
         cosf(euler->x) * cosf(euler->y),
         -sinf(euler->x),
         cosf(euler->x) * sinf(euler->y));
 
-    // which just so happens to also be our forward vector
-    forward = orbit;
-
     // cross it with whatever is the last up vector
     *right = vec3f_cross(forward, up);
+
+    /*// cross that for our new up vector
+    *up = vec3f_cross(right, forward);*/
+   // needed this to prevent rolling; note that this setup ignores roll, and you will have to correctly calculate these unit vectors for roll to function
+   *up = vec_new(
+       cosf(euler->x - MATHF_HPI) * cosf(euler->y),
+       -sinf(euler->x - MATHF_HPI),
+       cosf(euler->x - MATHF_HPI) * sinf(euler->y)
+   );
 
     // normalize
     vec3f_normalize_assignment(forward);
     vec3f_normalize_assignment(right);
+    vec3f_normalize_assignment(up);
 
     // convert to desired dir and check magnitude then normalize
     *velocity =	vec3f_add(
                 vec3f_multiplyf(*forward, vhj->x),
                 vec3f_multiplyf(*right, vhj->y));
 
-    if ((up->x = vec3f_square_magnitude_p(velocity)) > 0) {
-        vec3f_dividef_assignment(velocity, sqrtf(up->x));
+    if ((temp.x = vec3f_square_magnitude_p(velocity)) > 0) {
+        vec3f_dividef_assignment(velocity, sqrtf(temp.x));
     }
 
     // same for up and down
     if (vhj->z != 0) {
-        *up = vec3f_cross(right, forward);
-
-        if ((right->x = vec3f_square_magnitude_p(up)) != 0) {
-            vec3f_dividef_assignment(up, sqrtf(right->x));
-            *right = vec3f_multiplyf(*up, vhj->z * 5.0f);
-            vec3f_add_assignment(position, right);
+        if ((temp.x = vec3f_square_magnitude_p(up)) != 0) {
+            temp = vec3f_multiplyf(*up, vhj->z * 5.0f);
+            vec3f_add_assignment(position, &temp);
         }
     }
 
     // move
-    *right = vec3f_multiplyf(*velocity, 5.0f);
-    vec3f_add_assignment(position, right);
-
-    *up = vec3f_up;
+    temp = vec3f_multiplyf(*velocity, 5.0f);
+    vec3f_add_assignment(position, &temp);
 }
 
 #endif

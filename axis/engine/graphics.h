@@ -7,6 +7,9 @@
 
 #include "video.h"
 #include "stdint.h"
+#include "engine/overlay/camera.h"
+
+typedef float mtxf_t[4][4];
 
 typedef struct {
 	Mtx	projection;
@@ -17,12 +20,6 @@ typedef struct {
 
 typedef struct {
     Vp viewport;
-    float fov;
-    float aspect;
-    float near;
-    float far;
-    float scale;
-    uint16_t persp_norm;
     dynamic_t dynamic;
 } view_t;
 
@@ -38,7 +35,7 @@ typedef struct {
     // TODO: Pointers and malloc
     Gfx rsp_init[5];
     Gfx rdp_init[16];
-    Gfx clear_fb[8];
+    Gfx clear_fb[7];
 
     Gfx* glistp;
     OSTask* tlistp;
@@ -49,20 +46,14 @@ typedef struct {
 } __attribute__((aligned(16))) graphics_context_t;
 
 void view_construct(view_t* view) {
-    view->fov = 103.0f;
-    view->aspect = SCREEN_WD / SCREEN_HT;
-    view->near = 0.01f;
-    view->far = G_MAXZ;
-    view->scale = 1.0f;
-
     view->viewport.vp.vscale[0] = SCREEN_WD * 2;
     view->viewport.vp.vscale[1] = SCREEN_HT * 2;
-    view->viewport.vp.vscale[2] = view->far / 2;
+    view->viewport.vp.vscale[2] = G_MAXZ / 2;
     view->viewport.vp.vscale[3] = 0;
 
     view->viewport.vp.vtrans[0] = SCREEN_WD * 2;
     view->viewport.vp.vtrans[1] = SCREEN_HT * 2;
-    view->viewport.vp.vtrans[2] = view->far / 2;
+    view->viewport.vp.vtrans[2] = G_MAXZ / 2;
     view->viewport.vp.vtrans[3] = 0;
 }
 
@@ -128,25 +119,24 @@ void graphics_context_construct(graphics_context_t* context) {
         gsDPSetAlphaCompare(G_AC_NONE),
         gsDPSetRenderMode(G_RM_OPA_SURF, G_RM_OPA_SURF2),
         gsDPSetColorDither(G_CD_DISABLE),
-        gsDPSetBlendMask(0xff),
+        gsDPSetBlendMask(0xFF),
         gsDPPipeSync(),
         gsSPEndDisplayList()
     };
 
     Gfx clear_fb[] = {
         gsDPSetCycleType(G_CYC_FILL),
+        gsDPSetDepthImage(g_zbuffer),
         gsDPSetColorImage(G_IM_FMT_RGBA, COLOR_DEPTH_SIZE, SCREEN_WD, g_rsp_framebuffer),
-        gsDPSetFillColor(GPACK_RGBA5551(10, 8, 6, 1) << 16 | GPACK_RGBA5551(18, 16, 12, 1)),
+        gsDPSetFillColor(GPACK_RGBA5551(1, 0, 0, 0)),
         gsDPFillRectangle(0, 0, SCREEN_WD - 1, SCREEN_HT - 1),
         gsDPPipeSync(),
-        gsDPSetFillColor(GPACK_RGBA5551(18, 16, 12, 1) << 16 | GPACK_RGBA5551(10, 8, 6, 1)),
-        gsDPFillRectangle(20, 20, SCREEN_WD - 20, SCREEN_HT - 20),
         gsSPEndDisplayList()
     };
 
     memcpy(context->rsp_init, rsp_init, sizeof(Gfx) * 5);
     memcpy(context->rdp_init, rdp_init, sizeof(Gfx) * 17);
-    memcpy(context->clear_fb, clear_fb, sizeof(Gfx) * 8);
+    memcpy(context->clear_fb, clear_fb, sizeof(Gfx) * 7);
 
     context->glistp = &context->view.dynamic.glist[0];
     context->tlistp = &context->tlist;
@@ -202,6 +192,42 @@ void graphics_context_setup_tlist(graphics_context_t* context) {
 void graphics_context_swapfb(graphics_context_t* context) {
     osViSwapBuffer(context->framebuffer[context->current_fb]);
     context->current_fb = 1 - context->current_fb;
+}
+
+
+void guPositionLookF(mtxf_t mf, camera_t* camera)
+{
+    vec3f_t backwd;
+
+    guMtxIdentF(mf);
+
+    backwd = vec3f_multiplyf(camera->forward, -1.0f);
+
+    mf[0][0] = camera->right.x;
+	mf[1][0] = camera->right.y;
+	mf[2][0] = camera->right.z;
+
+	mf[0][1] = camera->up.x;
+	mf[1][1] = camera->up.y;
+	mf[2][1] = camera->up.z;
+
+	mf[0][2] = backwd.x;
+	mf[1][2] = backwd.y;
+	mf[2][2] = backwd.z;
+
+    mf[3][0] = -vec3f_dot(&camera->right, &camera->actor.position);
+    mf[3][1] = -vec3f_dot(&camera->up, &camera->actor.position);
+    mf[3][2] = -vec3f_dot(&backwd, &camera->actor.position);
+    mf[0][3] = 0;
+	mf[1][3] = 0;
+	mf[2][3] = 0;
+    mf[3][3] = 1.0f;
+}
+
+void guPositionLook(Mtx* m, camera_t* camera) {
+    mtxf_t mf;
+    guPositionLookF(mf, camera);
+    guMtxF2L(mf, m);
 }
 
 #endif /* GRAPHICS_H */

@@ -2,13 +2,24 @@
 #include <PR/ramrom.h>
 #include <assert.h>
 
-#include "main.h"
-#include "app_context.h"
-#include "app_main.h"
-#include "app_draw.h"
-#include "app_cont.h"
+#include "engine/main.h"
+
+#define EXAMPLE_SNAKE
+
+#ifdef EXAMPLE_ONETRI
+#include "examples/onetri/app_context.h"
+#include "examples/onetri/app_main.h"
+#include "examples/onetri/app_draw.h"
+#include "examples/onetri/app_cont.h"
+#elif defined EXAMPLE_SNAKE
+#include "examples/snake/app_context.h"
+#include "examples/snake/app_main.h"
+#include "examples/snake/app_draw.h"
+#include "examples/snake/app_cont.h"
+#endif
+
 #include "math/math_common.h"
-#include "printf.h"
+#include "engine/printf.h"
 #include "stdint.h"
 
 extern char _codeSegmentEnd[];
@@ -80,7 +91,7 @@ void mainproc(void* arg)
 
 	for(;;) {
 		this_time = osGetTime();
-		if (g_context.main_step) g_context.main_step(&g_context);
+		if (g_context.main_step) g_context.main_step(&g_context, 0);
 		g_context.main_time = OS_CYCLES_TO_SEC(this_time - last_time);
 		last_time = this_time;
 
@@ -106,7 +117,7 @@ void drawproc(void* arg) {
 
 	for (;;) {
 		this_time = osGetTime();
-		if (g_context.draw_step) g_context.draw_step(&g_context);
+		if (g_context.draw_step) g_context.draw_step(&g_context, 0);
 		g_context.draw_time = OS_CYCLES_TO_SEC((double)(this_time - last_time));
 		last_time = this_time;
 
@@ -138,7 +149,7 @@ void contproc(void* arg) {
 
 	for(;;) {
 		this_time = osGetTime();
-		if (g_context.cont_step) g_context.cont_step(&g_context);
+		if (g_context.cont_step) g_context.cont_step(&g_context, 0);
 		g_context.cont_time = OS_CYCLES_TO_SEC(this_time - last_time);
 		last_time = this_time;
 

@@ -2,12 +2,12 @@
 #define APP_CONT_H
 
 #include "app_context.h"
-#include "input.h"
-#include "graphics.h"
-#include "printf.h"
+#include "engine/input.h"
+#include "engine/graphics.h"
+#include "engine/printf.h"
 
 void contstep_default(app_context_t* app) {
-    if (app->graphics_context.frame_count % 60 == 0) {
+    if (app->graphics_context.frame_count % 600 == 0) {
         printf("dt contstep %f\ndt contproc %f\n", app->cont_time, app->contproc_time);
     }
 

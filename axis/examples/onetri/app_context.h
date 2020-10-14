@@ -3,10 +3,12 @@
 
 #include <ultra64.h>
 #include "math/math_common.h"
-#include "filesystem.h"
-#include "graphics.h"
-#include "input.h"
-#include "heap.h"
+#include "engine/filesystem.h"
+#include "engine/graphics.h"
+#include "engine/input.h"
+#include "engine/heap.h"
+#include "engine/entity.h"
+#include "engine/overlay/camera.h"
 #include "stdint.h"
 
 extern char _codeSegmentEnd[];
@@ -14,7 +16,6 @@ extern char _staticSegmentRomStart[], _staticSegmentRomEnd[];
 extern char _filesystemSegmentRomStart[], _filesystemSegmentRomEnd[];
 
 struct app_context_t;
-typedef void (*step_func_t)(struct app_context_t*);
 typedef void (*game_proc_t)(void*);
 
 #define	STACKSIZE 0x2000
@@ -58,14 +59,10 @@ typedef struct
     double drawproc_time;
     double contproc_time;
 
-    // TODO: Create camera context v
+    camera_t camera;
+
     vec3f_t euler;
-	vec3f_t orbit;
-	vec3f_t position;
 	vec3f_t velocity;
-	vec3f_t forward;
-	vec3f_t right;
-	vec3f_t up;
 	vec3i_t vhj;
 } app_context_t;
 
@@ -86,12 +83,7 @@ void app_context_construct(app_context_t* app, uint64_t* boot_stack, game_proc_t
     printf("heap construct at %X with %X space\n", app->heap.start, app->heap.size);
 
     app->euler = vec_new(0, HPI, 0);
-    app->orbit = vec3f_zero;
-    app->position = vec_new(0, 0, -100.0f);
     app->velocity = vec3f_zero;
-    app->forward = vec3f_forward;
-    app->right = vec3f_right;
-    app->up = vec3f_up;
     app->vhj = vec3i_zero;
 
     app->main_time = 0;
@@ -109,6 +101,9 @@ void app_context_initialize(app_context_t* app) {
 
     input_context_construct(&app->input_context);
     printf("input constructed\n");
+
+    camera_construct(&app->camera);
+    app->camera.actor.position.z = -100.0f;
 }
 
 #endif

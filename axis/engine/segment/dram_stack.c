@@ -1,5 +1,5 @@
 #include <ultra64.h>
-#include "video.h"
+#include "../video.h"
 #include "stdint.h"
 
 uint64_t dram_stack[SP_DRAM_STACK_SIZE64] __attribute__((aligned(16))); /* used for matrix stack */

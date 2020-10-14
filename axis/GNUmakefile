@@ -20,9 +20,8 @@ TARGETS		=	main.n64
 FILESYSTEM	=	filesystem.hfs
 FSPACK		=	../tools/fspack/fspack
 
-HFILES		=	main.h inttypes.h video.h printf.h graphics.h
-CODEFILES   =	main.c dram_stack.c
-DATAFILES   =	static.c rsp_framebuffer.c
+CODEFILES   =	main.c engine/segment/dram_stack.c ../include/math/pcg/pcg_basic.c
+DATAFILES   =	engine/segment/static.c engine/segment/rsp_framebuffer.c
 
 DATAOBJECTS =	$(DATAFILES:.c=.o)
 CODEOBJECTS =	$(CODEFILES:.c=.o)
