@@ -168,8 +168,14 @@ static inline float vec2f_magnitude_p(vec2f_t* lhs)
 static inline void vec2f_normalize_assignment(vec2f_t* lhs)
 {
     float magnitude = vec2f_magnitude_p(lhs);
-    lhs->x = (lhs->x / magnitude);
-    lhs->y = (lhs->y / magnitude);
+    if (magnitude == 0) {
+        lhs->x = 0;
+        lhs->y = 0;
+    }
+    else {
+        lhs->x = (lhs->x / magnitude);
+        lhs->y = (lhs->y / magnitude);
+    }
 }
 
 // returns the unit vector of the vec2f lhs
@@ -320,9 +326,16 @@ static inline float vec3f_magnitude_p(vec3f_t* lhs)
 static inline void vec3f_normalize_assignment(vec3f_t* lhs)
 {
     float magnitude = vec3f_magnitude_p(lhs);
-    lhs->x = (lhs->x / magnitude);
-    lhs->y = (lhs->y / magnitude);
-    lhs->z = (lhs->z / magnitude);
+    if (magnitude == 0) {
+        lhs->x = 0;
+        lhs->y = 0;
+        lhs->z = 0;
+    }
+    else {
+        lhs->x = (lhs->x / magnitude);
+        lhs->y = (lhs->y / magnitude);
+        lhs->z = (lhs->z / magnitude);
+    }
 }
 
 // returns the unit vector of the vec3f lhs
@@ -481,10 +494,18 @@ static inline float vec4f_magnitude_p(vec4f_t* lhs)
 static inline void vec4f_normalize_assignment(vec4f_t* lhs)
 {
     float magnitude = vec4f_magnitude_p(lhs);
-    lhs->x = (lhs->x / magnitude);
-    lhs->y = (lhs->y / magnitude);
-    lhs->z = (lhs->z / magnitude);
-    lhs->w = (lhs->w / magnitude);
+    if (magnitude == 0) {
+        lhs->x = 0;
+        lhs->y = 0;
+        lhs->z = 0;
+        lhs->w = 0;
+    }
+    else {
+        lhs->x = (lhs->x / magnitude);
+        lhs->y = (lhs->y / magnitude);
+        lhs->z = (lhs->z / magnitude);
+        lhs->w = (lhs->w / magnitude);
+    }
 }
 
 // returns the unit vector of the vec4f lhs
@@ -621,7 +642,7 @@ static inline void quatf_to_angle_axis_assignment(quatf_t* lhs, vec3f_t* axis, f
     *angle = acosf(lhs->w);
     sina = sinf(*angle);
 
-    if (fabsf(sina) > 1e-8f) {
+    if (fabsf(sina) > 1e-8f && sina != 0) {
         sina = 1.0f / sina;
 
         axis->x = lhs->x * sina;
@@ -653,7 +674,8 @@ static inline void quatf_from_look_rotation_assignment(quatf_t* lhs, vec3f_t* lo
     right = vec3f_cross(&forward, &right);
 
     lhs->w = sqrtf(1.0f + right.x + up->y + forward.z) * 0.5f;
-    recip = 1.0f / (4.0f * lhs->w);
+    if (lhs->w) recip = 1.0f / (4.0f * lhs->w);
+    else recip = 0;
 
     lhs->x = (up->z - forward.y) * recip;
     lhs->y = (forward.x - right.z) * recip;
@@ -667,22 +689,42 @@ static inline quatf_t quatf_from_look_rotation(vec3f_t* look_at, vec3f_t* up) {
 }
 
 static inline void quatf_to_matrix_assignment(float matrix[4][4], quatf_t lhs) {
-    float norm = 1.0f / quatf_magnitude_p(&lhs);
-    quatf_multiplyf_assignment(&lhs, norm);
+    float mag, norm;
+    mag = quatf_magnitude_p(&lhs);
 
-    matrix[0][0] = 1.0f - 2.0f * lhs.y * lhs.y - 2.0f * lhs.z * lhs.z;
-    matrix[0][1] = 2.0f * lhs.x * lhs.y - 2.0f * lhs.z * lhs.w;
-    matrix[0][2] = 2.0f * lhs.x * lhs.z + 2.0f * lhs.y * lhs.w;
-    matrix[0][3] = 0.0f;
-    matrix[1][0] = 2.0f * lhs.x * lhs.y + 2.0f * lhs.z * lhs.w;
-    matrix[1][1] = 1.0f - 2.0f * lhs.x * lhs.x - 2.0f * lhs.z * lhs.z;
-    matrix[1][2] = 2.0f * lhs.y * lhs.z - 2.0f * lhs.x * lhs.w;
-    matrix[1][3] = 0.0f;
-    matrix[2][0] = 2.0f * lhs.x * lhs.z - 2.0f * lhs.y * lhs.w;
-    matrix[2][1] = 2.0f * lhs.y * lhs.z + 2.0f * lhs.x * lhs.w;
-    matrix[2][2] = 1.0f - 2.0f * lhs.x * lhs.x - 2.0f * lhs.y * lhs.y;
-    matrix[2][3] = 0.0f;
-    matrix[3][3] = 1.0f;
+    if (mag == 0) {
+        matrix[0][0] = 1.0f;
+        matrix[0][1] = 0.0f;
+        matrix[0][2] = 0.0f;
+        matrix[0][3] = 0.0f;
+        matrix[1][0] = 0.0f;
+        matrix[1][1] = 1.0f;
+        matrix[1][2] = 0.0f;
+        matrix[1][3] = 0.0f;
+        matrix[2][0] = 0.0f;
+        matrix[2][1] = 0.0f;
+        matrix[2][2] = 1.0f;
+        matrix[2][3] = 0.0f;
+        matrix[3][3] = 1.0f;
+    }
+    else {
+        norm = 1.0f / quatf_magnitude_p(&lhs);
+        quatf_multiplyf_assignment(&lhs, norm);
+
+        matrix[0][0] = 1.0f - 2.0f * lhs.y * lhs.y - 2.0f * lhs.z * lhs.z;
+        matrix[0][1] = 2.0f * lhs.x * lhs.y - 2.0f * lhs.z * lhs.w;
+        matrix[0][2] = 2.0f * lhs.x * lhs.z + 2.0f * lhs.y * lhs.w;
+        matrix[0][3] = 0.0f;
+        matrix[1][0] = 2.0f * lhs.x * lhs.y + 2.0f * lhs.z * lhs.w;
+        matrix[1][1] = 1.0f - 2.0f * lhs.x * lhs.x - 2.0f * lhs.z * lhs.z;
+        matrix[1][2] = 2.0f * lhs.y * lhs.z - 2.0f * lhs.x * lhs.w;
+        matrix[1][3] = 0.0f;
+        matrix[2][0] = 2.0f * lhs.x * lhs.z - 2.0f * lhs.y * lhs.w;
+        matrix[2][1] = 2.0f * lhs.y * lhs.z + 2.0f * lhs.x * lhs.w;
+        matrix[2][2] = 1.0f - 2.0f * lhs.x * lhs.x - 2.0f * lhs.y * lhs.y;
+        matrix[2][3] = 0.0f;
+        matrix[3][3] = 1.0f;
+    }
 }
 
 
@@ -793,8 +835,14 @@ static inline float vec2i_magnitude_p(vec2i_t* lhs)
 static inline void vec2i_normalize_assignment(vec2i_t* lhs)
 {
     float magnitude = vec2i_magnitude_p(lhs);
-    lhs->x = (lhs->x / magnitude);
-    lhs->y = (lhs->y / magnitude);
+    if (magnitude == 0) {
+        lhs->x = 0;
+        lhs->y = 0;
+    }
+    else {
+        lhs->x = (lhs->x / magnitude);
+        lhs->y = (lhs->y / magnitude);
+    }
 }
 
 // returns the unit vector of the vec2i lhs
@@ -945,9 +993,16 @@ static inline float vec3i_magnitude_p(vec3i_t* lhs)
 static inline void vec3i_normalize_assignment(vec3i_t* lhs)
 {
     float magnitude = vec3i_magnitude_p(lhs);
-    lhs->x = (lhs->x / magnitude);
-    lhs->y = (lhs->y / magnitude);
-    lhs->z = (lhs->z / magnitude);
+    if (magnitude == 0) {
+        lhs->x = 0;
+        lhs->y = 0;
+        lhs->z = 0;
+    }
+    else {
+        lhs->x = (lhs->x / magnitude);
+        lhs->y = (lhs->y / magnitude);
+        lhs->z = (lhs->z / magnitude);
+    }
 }
 
 // returns the unit vector of the vec3i lhs
@@ -1239,8 +1294,14 @@ static inline float vec2s_magnitude_p(vec2s_t* lhs)
 static inline void vec2s_normalize_assignment(vec2s_t* lhs)
 {
     float magnitude = vec2s_magnitude_p(lhs);
-    lhs->x = (lhs->x / magnitude);
-    lhs->y = (lhs->y / magnitude);
+    if (magnitude == 0) {
+        lhs->x = 0;
+        lhs->y = 0;
+    }
+    else {
+        lhs->x = (lhs->x / magnitude);
+        lhs->y = (lhs->y / magnitude);
+    }
 }
 
 // returns the unit vector of the vec2s lhs
@@ -1391,9 +1452,16 @@ static inline float vec3s_magnitude_p(vec3s_t* lhs)
 static inline void vec3s_normalize_assignment(vec3s_t* lhs)
 {
     float magnitude = vec3s_magnitude_p(lhs);
-    lhs->x = (lhs->x / magnitude);
-    lhs->y = (lhs->y / magnitude);
-    lhs->z = (lhs->z / magnitude);
+    if (magnitude == 0) {
+        lhs->x = 0;
+        lhs->y = 0;
+        lhs->z = 0;
+    }
+    else {
+        lhs->x = (lhs->x / magnitude);
+        lhs->y = (lhs->y / magnitude);
+        lhs->z = (lhs->z / magnitude);
+    }
 }
 
 // returns the unit vector of the vec3s lhs
@@ -1552,10 +1620,18 @@ static inline float vec4s_magnitude_p(vec4s_t* lhs)
 static inline void vec4s_normalize_assignment(vec4s_t* lhs)
 {
     float magnitude = vec4s_magnitude_p(lhs);
-    lhs->x = (lhs->x / magnitude);
-    lhs->y = (lhs->y / magnitude);
-    lhs->z = (lhs->z / magnitude);
-    lhs->w = (lhs->w / magnitude);
+    if (magnitude == 0) {
+        lhs->x = 0;
+        lhs->y = 0;
+        lhs->z = 0;
+        lhs->w = 0;
+    }
+    else {
+        lhs->x = (lhs->x / magnitude);
+        lhs->y = (lhs->y / magnitude);
+        lhs->z = (lhs->z / magnitude);
+        lhs->w = (lhs->w / magnitude);
+    }
 }
 
 // returns the unit vector of the vec4s lhs

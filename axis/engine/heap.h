@@ -234,14 +234,14 @@ void* heap_realloc(heap_t* heap, void* address, uint32_t size) {
     heap_block_t* block;
     heap_block_t* new_block;
 
-    size = HEAP_ALIGN(size);
+    size = HEAP_ALIGN(size + HEAP_BLOCK_HEADER_SIZE);
     block = (heap_block_t*)(((uint32_t)address) - HEAP_BLOCK_HEADER_SIZE);
 
     if (size <= block->used || block->free >= size - block->used) {
         return (void*)(((uint32_t)block) + HEAP_BLOCK_HEADER_SIZE);
     }
     else {
-        new_block = (heap_block_t*)heap_alloc(heap, size);
+        new_block = (heap_block_t*)heap_alloc(heap, size - HEAP_BLOCK_HEADER_SIZE);
         memcpy(new_block, address, block->used);
         heap_free(heap, address);
         return new_block;

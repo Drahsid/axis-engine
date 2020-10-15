@@ -37,7 +37,6 @@ void contproc(void*);
 // this structure stores global information for the app that is accessible by everything
 app_context_t g_context;
 
-
 void boot(void* arg)
 {
     osInitialize();
@@ -61,7 +60,6 @@ void idleproc(void* arg)
 	osCreatePiManager(OS_PRIORITY_PIMGR, &g_context.pi_message_queue, g_context.pi_messages, NUM_PI_MSGS);
 
 	osStartThread(&g_context.threads[THREAD_MAIN]);
-	osStartThread(&g_context.threads[THREAD_DRAW]);
 
 	osSetThreadPri(0, 0);
 	for (;;);
@@ -83,6 +81,7 @@ void mainproc(void* arg)
 
 	// we start the controller thread late to make sure that all requisite structures are set up
 	osStartThread(&g_context.threads[THREAD_CONT]);
+	osStartThread(&g_context.threads[THREAD_DRAW]);
 
 	this_time = osGetTime();
 	last_time = osGetTime();
@@ -92,6 +91,7 @@ void mainproc(void* arg)
 	for(;;) {
 		this_time = osGetTime();
 		if (g_context.main_step) g_context.main_step(&g_context, 0);
+
 		g_context.main_time = OS_CYCLES_TO_SEC(this_time - last_time);
 		last_time = this_time;
 

@@ -74,6 +74,11 @@ typedef struct
 
 // Set up threads and basic info
 void app_context_construct(app_context_t* app, uint64_t* boot_stack, game_proc_t idleproc, game_proc_t mainproc, game_proc_t drawproc, game_proc_t contproc, void* arg) {
+    uint32_t fpstat;
+    fpstat = __osGetFpcCsr();
+	fpstat |= FPCSR_EZ;
+    __osSetFpcCsr(fpstat);
+
     app->boot_stack = boot_stack;
     app->memory_size = osGetMemSize();
     printf("have memory size %X\n", app->memory_size);

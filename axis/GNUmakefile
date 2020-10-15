@@ -2,14 +2,14 @@ include $(ROOT)/usr/include/make/PRdefs
 
 PRDEPTH = ../..
 
-FINAL = NO
+FINAL = YES
 ifeq ($(FINAL), YES)
-OPTIMIZE	=	-O1 -std=gnu11
+OPTIMIZE	=	-O1
 LCDEFS		=	-DNDEBUG -D_FINALROM -DF3DEX_GBI_2
 N64LIB		=	-lultra_rom
 ROMSIZE		=	24
 else
-OPTIMIZER	=	-g -std=gnu11
+OPTIMIZER	=	-g
 LCDEFS		=	-DDEBUG -DF3DEX_GBI_2
 N64LIB		=	-lultra_d
 ROMSIZE		=	24
@@ -29,8 +29,8 @@ CODESEGMENT =	codesegment.o
 OBJECTS		=	$(CODESEGMENT) $(DATAOBJECTS)
 
 LCINCS		=	-I. -I../include
-LCOPTS		=	-mno-shared -G 0
-LDFLAGS		=	$(MKDEPOPT)  -L$(ROOT)/usr/lib $(N64LIB) -L$(N64_LIBGCCDIR) -lgcc
+LCOPTS		=	-G 0 -march=vr4300 -mno-check-zero-division -mdivide-breaks -mno-shared -std=gnu11
+LDFLAGS		=	$(MKDEPOPT) -L$(ROOT)/usr/lib $(N64LIB) -L$(N64_LIBGCCDIR) -lgcc
 LDIRT 		=	$(APP) *.so
 
 default:	$(TARGETS)

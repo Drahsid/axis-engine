@@ -63,7 +63,7 @@ void graphics_context_construct(graphics_context_t* context) {
     context->frame_count = 0;
 
     osCreateViManager(OS_PRIORITY_VIMGR);
-    osViSetMode(&osViModeTable[OS_VI_NTSC_HPF1]);
+    osViSetMode(&osViModeTable[OS_VI_NTSC_LPN1]);
     osViSetSpecialFeatures(OS_VI_GAMMA_OFF | OS_VI_GAMMA_DITHER_OFF);
     osViSetSpecialFeatures(OS_VI_DITHER_FILTER_ON);
 

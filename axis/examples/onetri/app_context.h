@@ -68,15 +68,19 @@ typedef struct
 
 // Set up threads and basic info
 void app_context_construct(app_context_t* app, uint64_t* boot_stack, game_proc_t idleproc, game_proc_t mainproc, game_proc_t drawproc, game_proc_t contproc, void* arg) {
+    uint32_t fpstat;
+    fpstat = __osGetFpcCsr();
+	fpstat |= FPCSR_EZ;
+    __osSetFpcCsr(fpstat);
+
     app->boot_stack = boot_stack;
     app->memory_size = osGetMemSize();
     printf("have memory size %X\n", app->memory_size);
 
     osCreateThread(&app->threads[THREAD_IDLE], THREAD_IDLE + 1, idleproc, arg, ((uint8_t*)&app->stacks[THREAD_IDLE][0]) + STACKSIZE, 10);
-	osCreateThread(&app->threads[THREAD_MAIN], THREAD_MAIN + 1, mainproc, arg, ((uint8_t*)&app->stacks[THREAD_MAIN][0]) + STACKSIZE, 11);
-	osCreateThread(&app->threads[THREAD_DRAW], THREAD_DRAW + 1, drawproc, arg, ((uint8_t*)&app->stacks[THREAD_DRAW][0]) + STACKSIZE, 12);
-	osCreateThread(&app->threads[THREAD_CONT], THREAD_CONT + 1, contproc, arg, ((uint8_t*)&app->stacks[THREAD_CONT][0]) + STACKSIZE, 10);
-    printf("Created threads\n");
+    osCreateThread(&app->threads[THREAD_MAIN], THREAD_MAIN + 1, mainproc, arg, ((uint8_t*)&app->stacks[THREAD_MAIN][0]) + STACKSIZE, 11);
+    osCreateThread(&app->threads[THREAD_CONT], THREAD_CONT + 1, contproc, arg, ((uint8_t*)&app->stacks[THREAD_CONT][0]) + STACKSIZE, 10);
+    osCreateThread(&app->threads[THREAD_DRAW], THREAD_DRAW + 1, drawproc, arg, ((uint8_t*)&app->stacks[THREAD_DRAW][0]) + STACKSIZE, 12);
 
     heap_construct(&app->heap, (void*)(0x80000000u + (app->memory_size / 2)), app->memory_size / 2);
     g_heap = &app->heap;
